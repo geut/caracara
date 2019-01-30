@@ -1,21 +1,45 @@
 .App {
-  text-align: center;
+  display: flex;
+  flex-flow: row wrap;
+  /* The remaining place (horizontaly) will be spread out around divs in wrapper. */
+  justify-content: space-around;
 }
 
 .App-logo {
   animation: App-logo-spin infinite 20s linear;
-  height: 40vmin;
 }
 
 .App-header {
+  flex: 0 0 100%;
   background-color: #282c34;
-  min-height: 100vh;
+  min-height: 10vmin;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   font-size: calc(10px + 2vmin);
   color: white;
+}
+
+.App-username {
+  position: absolute;
+  right: 1em;
+}
+
+.App-editor {
+  padding: 1em;
+  /* To center the text vertically. */
+  display: flex;
+  flex-flow: column nowrap;
+  justify-content: center;
+  /*Styles for sample presentation*/
+  text-align: justify;
+  flex: 1 0 30%;
+}
+
+.App-history {
+  flex: 0 0 25%;
+  margin-left: 0;
 }
 
 .App-link {
