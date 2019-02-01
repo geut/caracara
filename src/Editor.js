@@ -1,5 +1,5 @@
 import Plain from 'slate-plain-serializer'
-import { Editor } from 'slate-react'
+// import { Editor } from 'slate-react'
 
 import Prism from 'prismjs'
 import React, { Component } from 'react'
@@ -87,7 +87,7 @@ class MarkdownPreview extends Component {
       onChange={this.simpleOnChange}
       onKeyUp={this.onKey}
       cols={120}
-      rows={80}
+      rows={50}
       autoComplete={'off'}
       autoFocus={true}
     />;
@@ -120,8 +120,8 @@ class MarkdownPreview extends Component {
     const ops = change.operations
       .filter(
         o =>
-          o.type != 'set_selection' &&
-          o.type != 'set_value' &&
+          o.type !== 'set_selection' &&
+          o.type !== 'set_value' &&
           (!o.data || !o.data.has('source'))
       )
       .toJS()

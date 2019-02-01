@@ -4,7 +4,10 @@ const { Writable } = require('stream')
 const hyperdb = require('hyperdb')
 const pump = require('pump')
 const hyperid = require('hyperid')
+const tinydate = require('tinydate').default
 const uuid = hyperid()
+
+const stamp = tinydate('{HH}:{mm}:{ss}');
 
 class ForEachChunk extends Writable {
   constructor (opts, cb) {
@@ -124,14 +127,17 @@ class Saga extends EventEmitter {
     this.newestOperations = []
 
     const ws = forEachChunk({ objectMode: true }, (data, enc, next) => {
-      const { key, value } = data
+      const { key } = data
 
       if (/operations/.test(key)) {
         console.log(`check if operations has key ${key}`)
         if (this.operations.has(key)) {
-          console.log(`Destroying history stream - operation found with key ${key}`)
-          //h.destroy()
-            //return
+          // TODO(dk): check this condition, if we destroy the stream nothing works. In the other hand
+          // it would be cool to not process everything again and again. That was the purpose of maintaining
+          // a newestOperations array.
+
+          // h.destroy()
+          // return
         } else {
           console.log(`Adding new operation key ${key}`)
           this.newestOperations.push(data)
@@ -143,14 +149,13 @@ class Saga extends EventEmitter {
 
     pump(h, ws, err => {
       // work with latest operations in the right order
-      const opsLength = this.newestOperations.length;
-      this.newestOperations.reverse().map((op, idx) => {
+      this.newestOperations.reverse().forEach((op, idx) => {
         console.log('aplicando operaciones nuevas')
         const { key, value } = op;
         const { message } = value;
         const { peerValue } = message;
-        const { text, operation } = peerValue;
-        const historyMessage = `${value.username} ${operation === 'DELETE' ? 'removed' : 'added'} some text - ⌚️ ${value.timestamp}`;
+        const { operation } = peerValue;
+        const historyMessage = `${value.username} ${operation === 'DELETE' ? 'removed' : 'added'} some text - ⌚️ ${stamp(new Date(value.timestamp))}`;
         const newDoc = Automerge.change(this.doc,
           historyMessage,
           doc => {
