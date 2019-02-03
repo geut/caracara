@@ -33,11 +33,28 @@
   flex: 1 0 30%;
 }
 
+.App-editor textarea {
+  font-family:Courier, monospace;
+  resize: none;
+  padding: 5px;
+  font-size: 1.2rem;
+  line-height:40px;
+  background-color: #D8D8D8;
+  border-radius: 5px;
+  outline: none;
+}
+
+.App-editor textarea:focus {
+  border-color: #338EDA;
+  border-width: 2px;
+}
+
 .App-history {
   flex: 0 0 25%;
   margin-left: 0;
   padding: 1em;
   overflow: scroll;
+  height: 80vh;
 }
 
 .App-link {

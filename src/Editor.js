@@ -83,11 +83,11 @@ class MarkdownPreview extends Component {
     )
     */
     return <textarea
+      placeholder="What's on your head?"
       value={this.props.peerValue.text}
       onChange={this.simpleOnChange}
       onKeyUp={this.onKey}
-      cols={120}
-      rows={50}
+      rows={15}
       autoComplete={'off'}
       autoFocus={true}
     />;

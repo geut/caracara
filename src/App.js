@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { BrowserRouter as Router, Route } from "react-router-dom";
 import Modal from 'react-modal';
+import { debounce } from 'debounce';
 import Doc from './Doc';
 import swarm from './p2p/swarm';
 
@@ -50,6 +51,8 @@ class App extends Component {
       this.setState({
         commReady: true
       })
+      // add debounce to writeMessage
+      this.comm.writeMessage = debounce(this.comm.writeMessage, 200);
     }
   }
 
