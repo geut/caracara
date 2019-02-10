@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import { BrowserRouter as Router, Route } from "react-router-dom";
 import Modal from 'react-modal';
-import { debounce } from 'debounce';
 import Doc from './Doc';
 import swarm from './p2p/swarm';
 
@@ -51,13 +50,7 @@ class App extends Component {
       this.setState({
         commReady: true
       })
-      // add debounce to writeMessage
-      this.comm.writeMessage = debounce(this.comm.writeMessage, 200);
     }
-  }
-
-  componentWillUnmount() {
-    this.comm.removeAllListeners('message')
   }
 
   render(props) {
@@ -77,7 +70,7 @@ class App extends Component {
         >
           <form onSubmit={this.closeModal}>
             <legend>Set your username</legend>
-            <input type="text" onChange={this.saveUsername}/>
+            <input type="text" onChange={this.saveUsername} required/>
             <button type="submit">Enter</button>
           </form>
         </Modal>
