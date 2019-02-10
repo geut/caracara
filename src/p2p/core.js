@@ -1,13 +1,10 @@
-const Automerge = require('automerge')
 const EventEmitter = require('events')
 const { Writable } = require('stream')
 const hyperdb = require('hyperdb')
 const pump = require('pump')
 const hyperid = require('hyperid')
-const tinydate = require('tinydate').default
-const uuid = hyperid()
 
-const stamp = tinydate('{HH}:{mm}:{ss}');
+const uuid = hyperid()
 
 class ForEachChunk extends Writable {
   constructor (opts, cb) {
@@ -32,11 +29,10 @@ class Saga extends EventEmitter {
     super()
 
     this.operations = new Map()
-    this.newestOperations = []
+    this.newestOperations = new Map()
     this.users = new Map()
     this.username = username
     this.timestamp = Date.now()
-    this.doc = Automerge.init()
 
     this.db = hyperdb(storage, key, { valueEncoding: 'json' })
   }
@@ -47,7 +43,7 @@ class Saga extends EventEmitter {
     this._updateHistory(this._watchForOperations.bind(this))
   }
 
-  // TODO(dk); rename to writeOperation
+  // TODO(dk): rename to writeOperation
   writeMessage (message) {
     const key = `operations/${uuid()}`
     // NOTE(dk): operation can be part of message. Maybe message can be seen as content receipt? but thus would make an op like a 2nd class citizen and we dont want to transmit that :thinking:
@@ -123,8 +119,6 @@ class Saga extends EventEmitter {
   _updateHistory (onFinish) {
     const h = this.db.createHistoryStream({ reverse: true })
 
-    // reset newestOperations
-    this.newestOperations = []
 
     const ws = forEachChunk({ objectMode: true }, (data, enc, next) => {
       const { key } = data
@@ -140,7 +134,7 @@ class Saga extends EventEmitter {
           // return
         } else {
           console.log(`Adding new operation key ${key}`)
-          this.newestOperations.push(data)
+          this.newestOperations.set(data.key, data.value)
         }
       }
 
@@ -149,34 +143,18 @@ class Saga extends EventEmitter {
 
     pump(h, ws, err => {
       // work with latest operations in the right order
-      this.newestOperations.reverse().forEach((op, idx) => {
+      const values = [...this.newestOperations.values()]
+      const keys = [...this.newestOperations.keys()]
+      values.reverse().forEach((val, idx) => {
         console.log('aplicando operaciones nuevas')
-        const { key, value } = op;
-        const { message } = value;
-        const { peerValue } = message;
-        const { operation } = peerValue;
-        const historyMessage = `${value.username} ${operation === 'DELETE' ? 'removed' : 'added'} some text - ⌚️ ${stamp(new Date(value.timestamp))}`;
-        const newDoc = Automerge.change(this.doc,
-          historyMessage,
-          doc => {
-            doc.text = new Automerge.Text()
-            doc.text.insertAt(0, value.message.peerValue.text)
-            return doc
-          }
-        )
-        const history = Automerge.getHistory(newDoc).map(state => [state.change.message, state.snapshot.text])
-        this.emit('message', { ...value, text: newDoc.text.join(''), history }, key)
-        // write latest operation
-        /*
-        if (idx === 0) {
-          console.log(`last known operation key ${op.key}`)
-          console.log(`last known operation text ${op.value.message.peerValue.text}`)
-          this.operations.set(op.key, op.value);
-        }
-        */
-        this.operations.set(op.key, op.value);
+        const key = keys[idx]
+        this.emit('message', { ...val }, key)
+        // update applied operations
+        this.operations.set(key, val);
       })
 
+      // reset newestOperations
+      this.newestOperations = new Map()
       if (onFinish) onFinish(err)
     })
   }
