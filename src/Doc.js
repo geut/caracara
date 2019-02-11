@@ -1,7 +1,5 @@
 import React, { Component } from 'react';
-import copy from 'copy-to-clipboard';
 import MarkdownPreview from './Editor';
-import Clip from './icons/clipboard';
 import Automerge from 'automerge';
 const DiffMatchPatch = require('diff-match-patch');
 
@@ -18,7 +16,6 @@ class Doc extends Component {
       localHistory: []
     }
 
-    this.url = window.location.protocol + '//' + window.location.host
     // save doc in localStorage
     // Note(dk): add support for reading an old doc, or better to select the doc to use :)
     this.original = undefined;
@@ -26,7 +23,6 @@ class Doc extends Component {
   }
 
   async componentDidMount() {
-    console.log('componentDidMount!!!!')
     this.props.comm.on('message', data => {
       const { username, message } = data;
       if (username === this.props.username) return;
@@ -56,7 +52,6 @@ class Doc extends Component {
   }
 
   updatePeerValue = val => {
-    console.log('updatePeerValue')
     const { comm, username } = this.props;
     const { text } = val;
 
@@ -138,25 +133,12 @@ class Doc extends Component {
     });
   }
 
-  copy = e => {
-    e.preventDefault();
-    copy(`${this.url}?draft=${this.props.comm.db.key.toString('hex')}`)
-  }
+
 
   render() {
     const { username, comm } = this.props;
     return (
       <>
-        <header className="App-header">
-          Caracara <span role="img" aria-label="caracara bird using a emoji">🐧</span>
-          <span className="App-username">{username ? `${username} is online` : ''}</span>
-          <div>
-            <span>
-              {comm && comm.db.key ? `Draft: ${comm.db.key.toString('hex')}` : ''}
-            </span>
-            <span onClick={this.copy} className="App-icon-clip"><Clip /></span>
-          </div>
-        </header>
         <div className="App-editor">
           <MarkdownPreview text={this.state.text} updatePeerValue={this.updatePeerValue}/>
         </div>
