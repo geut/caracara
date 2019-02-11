@@ -7,19 +7,21 @@ import signalhub from 'signalhubws';
 // P2P DEFAULTS
 const webrtcOpts = {
   config: {
-    iceServers: (process.env.ICE_URLS || config.ICE_URLS).split(';').map(data => {
-      const [urls, credential, username] = data.split(',')
+    iceServers: (process.env.ICE_URLS || config.ICE_URLS)
+      .split(';')
+      .map(data => {
+        const [urls, credential, username] = data.split(',');
 
-      if (credential && username) {
-        return {
-          urls,
-          credential,
-          username
+        if (credential && username) {
+          return {
+            urls,
+            credential,
+            username
+          };
         }
-      }
 
-      return { urls }
-    })
+        return { urls };
+      })
   }
 };
 // END P2P DEFAULTS
@@ -33,10 +35,9 @@ const initComm = async (username, key) => {
   const sw = swarm({
     id: username,
     stream: () => {
-      return saga.replicate()
+      return saga.replicate();
     }
   });
-
 
   const discoveryKey = saga.db.discoveryKey.toString('hex');
   const signalUrls = (process.env.SIGNAL_URLS || config.SIGNAL_URLS).split(';');
@@ -48,9 +49,9 @@ const initComm = async (username, key) => {
     } catch (err) {
       console.log(err);
     }
-  })
+  });
 
   return saga;
-}
+};
 
 export default initComm;
