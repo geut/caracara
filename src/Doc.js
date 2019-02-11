@@ -117,6 +117,8 @@ class Doc extends Component {
               return doc;
             });
             break;
+          default:
+            break;
         }
         if (newDoc) {
           const changes = Automerge.getChanges(this.doc, newDoc);
@@ -142,7 +144,6 @@ class Doc extends Component {
   };
 
   render() {
-    const { username, comm } = this.props;
     return (
       <>
         <div className="App-editor">
