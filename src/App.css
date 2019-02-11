@@ -34,18 +34,18 @@
 }
 
 .App-editor textarea {
-  font-family:Courier, monospace;
+  font-family: Courier, monospace;
   resize: none;
   padding: 5px;
   font-size: 1.2rem;
-  line-height:40px;
-  background-color: #D8D8D8;
+  line-height: 40px;
+  background-color: #d8d8d8;
   border-radius: 5px;
   outline: none;
 }
 
 .App-editor textarea:focus {
-  border-color: #338EDA;
+  border-color: #338eda;
   border-width: 2px;
 }
 
@@ -64,7 +64,7 @@
 .App-icon-clip {
   width: 25px;
   height: 25px;
-  margin-left: .5rem;
+  margin-left: 0.5rem;
   display: inline-block;
   cursor: pointer;
 }

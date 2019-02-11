@@ -1,5 +1,5 @@
 import { debounce } from 'debounce';
-import React, { Component } from 'react'
+import React, { Component } from 'react';
 
 class Editor extends Component {
   constructor(props) {
@@ -7,13 +7,13 @@ class Editor extends Component {
     this.state = {
       value: props.text || '',
       selectionStart: -1
-    }
+    };
     this.taRef = React.createRef();
   }
 
   componentDidUpdate(prevProps, prevState) {
     if (prevProps.text === this.state.text) return;
-     if (this.state.selectionStart !== -1){
+    if (this.state.selectionStart !== -1) {
       this.setCaretToPos(this.taRef.current, this.state.selectionStart);
     }
   }
@@ -25,21 +25,23 @@ class Editor extends Component {
     return null;
   }
 
-  shouldComponenUpdate(nextProps, nextState){
-    if (nextProps.text === this.state.text) return false
-    return true
+  shouldComponenUpdate(nextProps, nextState) {
+    if (nextProps.text === this.state.text) return false;
+    return true;
   }
 
   render() {
-    return <textarea
-      ref={this.taRef}
-      placeholder="What's on your head?"
-      value={this.state.value}
-      onChange={this.simpleOnChange}
-      rows={15}
-      autoComplete={'off'}
-      autoFocus={true}
-    />;
+    return (
+      <textarea
+        ref={this.taRef}
+        placeholder="What's on your head?"
+        value={this.state.value}
+        onChange={this.simpleOnChange}
+        rows={15}
+        autoComplete={'off'}
+        autoFocus={true}
+      />
+    );
   }
 
   setSelectionRange = (input, selectionStart, selectionEnd) => {
@@ -57,11 +59,11 @@ class Editor extends Component {
 
   setCaretToPos = (input, pos) => {
     this.setSelectionRange(input, pos, pos);
-  }
+  };
 
   debouncedPeerValue = debounce(({ text }) => {
     this.props.updatePeerValue({ text });
-  }, 20)
+  }, 20);
 
   simpleOnChange = e => {
     const { value, selectionStart } = e.target;
@@ -69,13 +71,13 @@ class Editor extends Component {
     this.setState({
       value,
       selectionStart
-    })
-    this.debouncedPeerValue({text: value})
-  }
+    });
+    this.debouncedPeerValue({ text: value });
+  };
 }
 
 /**
  * Export.
  */
 
-export default Editor
+export default Editor;
