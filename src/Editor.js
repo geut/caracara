@@ -36,7 +36,7 @@ class Editor extends Component {
         ref={this.taRef}
         placeholder="What's on your head?"
         value={this.state.value}
-        onChange={this.simpleOnChange}
+        onChange={this.onChange}
         rows={15}
         autoComplete={'off'}
         autoFocus={true}
@@ -65,7 +65,7 @@ class Editor extends Component {
     this.props.updatePeerValue({ text });
   }, 20);
 
-  simpleOnChange = e => {
+  onChange = e => {
     const { value, selectionStart } = e.target;
 
     this.setState({

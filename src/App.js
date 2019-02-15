@@ -55,6 +55,7 @@ class App extends Component {
       });
     }
   }
+
   copy = e => {
     e.preventDefault();
     copy(`${this.url}?draft=${this.comm.db.key.toString('hex')}`);
