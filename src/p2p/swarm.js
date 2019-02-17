@@ -1,4 +1,4 @@
-import Saga from './core';
+import Saga from '@geut/saga';
 import config from './config';
 import ram from 'random-access-memory';
 import swarm from '@geut/discovery-swarm-webrtc';

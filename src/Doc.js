@@ -22,32 +22,32 @@ class Doc extends Component {
   }
 
   async componentDidMount() {
-    this.props.comm.on('message', data => {
-      const { username, message } = data;
+    this.props.comm.on('operation', data => {
+      const { username, operation } = data;
       if (username === this.props.username) return;
-      console.log('INCOMING MESSAGE');
-      console.log('new message arrival from:', username);
-      console.log('new message arrival content:', message);
-      if (message.peerValue.length === 0) return;
+      console.log('INCOMING OPERATION');
+      console.log('new operation from:', username);
+      console.log('new operation content:', operation);
+      if (operation.peerValue.length === 0) return;
       let newDoc;
       if (!this.doc) {
-        newDoc = Automerge.applyChanges(Automerge.init(), message.peerValue);
+        newDoc = Automerge.applyChanges(Automerge.init(), operation.peerValue);
       } else {
-        newDoc = Automerge.applyChanges(this.doc, message.peerValue); // peerValue are automerge changes
+        newDoc = Automerge.applyChanges(this.doc, operation.peerValue); // peerValue are automerge changes
       }
-      if (message.original) {
-        this.original = message.original;
+      if (operation.original) {
+        this.original = operation.original;
       }
       this.doc = newDoc;
       this.setState({
         text: newDoc.text.join(''),
-        localHistory: [...this.state.localHistory, message.diff]
+        localHistory: [...this.state.localHistory, operation.diff]
       });
     });
   }
 
   componentWillUnmount() {
-    this.props.comm.removeAllListeners('message');
+    this.props.comm.removeAllListeners('operation');
   }
 
   updatePeerValue = val => {
@@ -65,7 +65,7 @@ class Doc extends Component {
       const creationChange = Automerge.getChanges(Automerge.init(), this.doc);
       this.original = true;
 
-      comm.writeMessage({
+      comm.writeOperation({
         peerValue: creationChange,
         username,
         original: this.original,
@@ -131,7 +131,7 @@ class Doc extends Component {
             () => {
               console.log('>>> this.doc text', this.doc.text.join(''));
               // NOTE(dk): here we are sharing changes we made locally with our peers.
-              comm.writeMessage({
+              comm.writeOperation({
                 peerValue: changes,
                 username,
                 diff: changes[0].message
