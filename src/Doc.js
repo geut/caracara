@@ -1,9 +1,13 @@
 import React, { Component } from 'react';
 import MarkdownPreview from './Editor';
 import Automerge from 'automerge';
-const DiffMatchPatch = require('diff-match-patch');
+import Typography from '@material-ui/core/Typography';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemText from '@material-ui/core/ListItemText';
+import DiffMatchPatch from 'diff-match-patch';
+import tinydate from 'tinydate';
 
-const tinydate = require('tinydate').default;
 const stamp = tinydate('{HH}:{mm}:{ss}');
 
 class Doc extends Component {
@@ -144,21 +148,32 @@ class Doc extends Component {
   };
 
   render() {
+    const { classes } = this.props;
+
     return (
       <>
-        <div className="App-editor">
+        <div className={classes.editor}>
           <MarkdownPreview
             text={this.state.text}
+            classes={classes.textField}
             updatePeerValue={this.updatePeerValue}
           />
         </div>
-        <aside className="App-history">
-          History:
-          <ul>
+        <aside className={classes.history}>
+          <Typography color="textSecondary" className={classes.title}>
+            History
+          </Typography>
+          <List
+            dense={true}
+            disablePadding={true}
+            className={classes.historyItems}
+          >
             {[...this.state.localHistory].reverse().map((h, i) => (
-              <li key={`history-${i}`}>{h}</li>
+              <ListItem key={`history-${i}`}>
+                <ListItemText primary={h} />
+              </ListItem>
             ))}
-          </ul>
+          </List>
         </aside>
       </>
     );

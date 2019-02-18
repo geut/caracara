@@ -1,5 +1,6 @@
 import { debounce } from 'debounce';
 import React, { Component } from 'react';
+import TextField from '@material-ui/core/TextField';
 
 class Editor extends Component {
   constructor(props) {
@@ -31,13 +32,21 @@ class Editor extends Component {
   }
 
   render() {
+    const { classes } = this.props;
+
     return (
-      <textarea
+      <TextField
         ref={this.taRef}
+        id="outlined-multiline-static"
+        label="Editor"
+        multiline
+        rows="15"
         placeholder="What's on your head?"
-        value={this.state.value}
+        className={classes}
+        margin="normal"
+        variant="outlined"
         onChange={this.onChange}
-        rows={15}
+        value={this.state.value}
         autoComplete={'off'}
         autoFocus={true}
       />

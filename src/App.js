@@ -1,23 +1,66 @@
 import React, { Component } from 'react';
 import { BrowserRouter as Router, Route } from 'react-router-dom';
-import Modal from 'react-modal';
+
+import Modal from '@material-ui/core/Modal';
+import { withStyles } from '@material-ui/core/styles';
+import AppBar from '@material-ui/core/AppBar';
+import Toolbar from '@material-ui/core/Toolbar';
+import Typography from '@material-ui/core/Typography';
+import Fab from '@material-ui/core/Fab';
+
+import withRoot from './withRoot';
+
 import copy from 'copy-to-clipboard';
 import Clip from './icons/clipboard';
 import Doc from './Doc';
 import swarm from './p2p/swarm';
+import Username from './Username';
 
-import './App.css';
-
-const customStyles = {
-  content: {
-    top: '50%',
-    left: '50%',
-    right: 'auto',
-    bottom: 'auto',
-    marginRight: '-50%',
-    transform: 'translate(-50%, -50%)'
+const styles = theme => ({
+  root: {
+    display: 'flex',
+    flexFlow: 'row wrap',
+    /* The remaining place (horizontaly) will be spread out around divs in wrapper. */
+    justifyContent: 'space-around'
+  },
+  modal: {
+    textAlign: 'center',
+    paddingTop: theme.spacing.unit * 20
+  },
+  paper: {
+    position: 'absolute',
+    width: theme.spacing.unit * 50,
+    backgroundColor: theme.palette.background.paper,
+    boxShadow: theme.shadows[5],
+    padding: theme.spacing.unit * 4,
+    outline: 'none'
+  },
+  grow: {
+    flexGrow: 1
+  },
+  fab: {
+    margin: theme.spacing.unit
+  },
+  editor: {
+    flex: '1 0 30%'
+  },
+  history: {
+    flex: '0 0 25%'
+  },
+  textField: {
+    marginLeft: theme.spacing.unit,
+    marginRight: theme.spacing.unit,
+    display: 'flex'
+  },
+  title: {
+    margin: `${theme.spacing.unit}px ${theme.spacing.unit * 4}px 0 ${theme
+      .spacing.unit * 2}px`
+  },
+  historyItems: {
+    maxHeight: '50vh',
+    overflow: 'auto'
   }
-};
+});
 
 class App extends Component {
   constructor() {
@@ -63,24 +106,16 @@ class App extends Component {
 
   render(props) {
     const { modalIsOpen, commReady } = this.state;
+    const { classes } = this.props;
+
     return (
-      <div className="App">
-        <Modal
-          isOpen={this.state.modalIsOpen}
-          onRequestClose={this.closeModal}
-          style={customStyles}
-          contentLabel="Set your username"
-          shouldCloseOnOverlayClick={false}
-          shouldCloseOnEsc={false}
-          data={{
-            background: 'green'
-          }}
-        >
-          <form onSubmit={this.closeModal}>
-            <legend>Set your username</legend>
-            <input type="text" onChange={this.saveUsername} required />
-            <button type="submit">Enter</button>
-          </form>
+      <div className={classes.root}>
+        <Modal open={this.state.modalIsOpen} disableEscapeKeyDown={true}>
+          <Username
+            classes={classes.paper}
+            closeModal={this.closeModal}
+            saveUsername={this.saveUsername}
+          />
         </Modal>
         <Router>
           {!modalIsOpen && commReady ? (
@@ -89,31 +124,45 @@ class App extends Component {
               render={props => {
                 return (
                   <>
-                    <header className="App-header">
-                      Caracara{' '}
-                      <span role="img" aria-label="caracara bird using a emoji">
-                        🐧
-                      </span>
-                      <span className="App-username">
-                        {this.state.username
-                          ? `${this.state.username} is online`
-                          : ''}
-                      </span>
-                      <div>
-                        <span>
-                          {this.comm && this.comm.db.key
-                            ? `Draft: ${this.comm.db.key.toString('hex')}`
+                    <AppBar position="static">
+                      <Toolbar>
+                        <Typography
+                          variant="h6"
+                          color="inherit"
+                          className={classes.grow}
+                        >
+                          Caracara
+                          <span
+                            role="img"
+                            aria-label="caracara bird using a emoji"
+                          >
+                            🐧
+                          </span>
+                        </Typography>
+                        <Typography
+                          color="textPrimary"
+                          variant="h6"
+                          noWrap={true}
+                        >
+                          {this.state.username
+                            ? `Welcome ${this.state.username}`
                             : ''}
-                        </span>
-                        <span onClick={this.copy} className="App-icon-clip">
+                        </Typography>
+                        <Fab
+                          color="secondary"
+                          onClick={this.copy}
+                          aria-label="Share your doc"
+                          className={classes.fab}
+                        >
                           <Clip />
-                        </span>
-                      </div>
-                    </header>
+                        </Fab>
+                      </Toolbar>
+                    </AppBar>
                     <Doc
                       username={this.state.username}
                       comm={this.comm}
                       draftId={this.draftId}
+                      classes={classes}
                     />
                   </>
                 );
@@ -126,6 +175,4 @@ class App extends Component {
   }
 }
 
-Modal.setAppElement('#root');
-
-export default App;
+export default withRoot(withStyles(styles)(App));
