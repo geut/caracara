@@ -1,12 +1,14 @@
 import React, { Component } from 'react';
 import { BrowserRouter as Router, Route } from 'react-router-dom';
-
+// Material-UI
 import Modal from '@material-ui/core/Modal';
 import { withStyles } from '@material-ui/core/styles';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import Fab from '@material-ui/core/Fab';
+
+import 'typeface-roboto';
 
 import withRoot from './withRoot';
 
@@ -21,7 +23,8 @@ const styles = theme => ({
     display: 'flex',
     flexFlow: 'row wrap',
     /* The remaining place (horizontaly) will be spread out around divs in wrapper. */
-    justifyContent: 'space-around'
+    justifyContent: 'space-around',
+    backgroundColor: theme.palette.grey[200]
   },
   modal: {
     textAlign: 'center',
@@ -41,8 +44,13 @@ const styles = theme => ({
   fab: {
     margin: theme.spacing.unit
   },
+  toolbar: {
+    alignItems: 'center',
+    justifyContent: 'space-between'
+  },
   editor: {
-    flex: '1 0 30%'
+    flex: '1 0 30%',
+    height: '100vh'
   },
   history: {
     flex: '0 0 25%'
@@ -125,12 +133,8 @@ class App extends Component {
                 return (
                   <>
                     <AppBar position="static">
-                      <Toolbar>
-                        <Typography
-                          variant="h6"
-                          color="inherit"
-                          className={classes.grow}
-                        >
+                      <Toolbar className={classes.toolbar}>
+                        <Typography variant="h6" color="inherit">
                           Caracara
                           <span
                             role="img"
@@ -139,11 +143,7 @@ class App extends Component {
                             🐧
                           </span>
                         </Typography>
-                        <Typography
-                          color="textPrimary"
-                          variant="h6"
-                          noWrap={true}
-                        >
+                        <Typography align="center" variant="h6" noWrap={true}>
                           {this.state.username
                             ? `Welcome ${this.state.username}`
                             : ''}

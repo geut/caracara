@@ -160,7 +160,11 @@ class Doc extends Component {
           />
         </div>
         <aside className={classes.history}>
-          <Typography color="textSecondary" className={classes.title}>
+          <Typography
+            color="textSecondary"
+            variant="subtitle1"
+            className={classes.title}
+          >
             History
           </Typography>
           <List
