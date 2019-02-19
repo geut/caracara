@@ -7,13 +7,13 @@ import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import Fab from '@material-ui/core/Fab';
-
+import FileCopy from '@material-ui/icons/FileCopy';
 import 'typeface-roboto';
 
 import withRoot from './withRoot';
 
 import copy from 'copy-to-clipboard';
-import Clip from './icons/clipboard';
+//import Clip from './icons/clipboard';
 import Doc from './Doc';
 import swarm from './p2p/swarm';
 import Username from './Username';
@@ -67,6 +67,9 @@ const styles = theme => ({
   historyItems: {
     maxHeight: '50vh',
     overflow: 'auto'
+  },
+  icon: {
+    fontSize: 24
   }
 });
 
@@ -134,8 +137,8 @@ class App extends Component {
                   <>
                     <AppBar position="static">
                       <Toolbar className={classes.toolbar}>
-                        <Typography variant="h6" color="inherit">
-                          Caracara
+                        <Typography variant="h5" color="inherit">
+                          Caracara &nbsp;
                           <span
                             role="img"
                             aria-label="caracara bird using a emoji"
@@ -153,8 +156,9 @@ class App extends Component {
                           onClick={this.copy}
                           aria-label="Share your doc"
                           className={classes.fab}
+                          size="medium"
                         >
-                          <Clip />
+                          <FileCopy className={classes.icon} />
                         </Fab>
                       </Toolbar>
                     </AppBar>
