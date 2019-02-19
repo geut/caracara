@@ -36,20 +36,27 @@ Run in a different terminal:
 
 #### Introduction: The idea
 
-Trying to combine, [again](https://github.com/geut/olaf), Dat with some web development. The result will be a new _experimental_ app, a mix between kingdoms.
-When you combine something like this (at first two different worlds into one) the result does not meant to be a sum of all the benefits or even cons. No, it is more like a new thing.
-In this case, what can you expect from a web app combined with Dat? You can [see it](https://caracara.hashbase.io/) for yourself. The content is distributed and owned by the peers.
+Trying to combine, [again](https://github.com/geut/olaf), Dat with some
+web development. The result will be a new experimental app, a mix between
+two kingdoms. When you combine something like this (at first two different
+worlds into one) the result does not mean to be the sum of all the
+benefits or even cons: a complete new thing. Based on this, what can you expect
+from a web app combined with Dat? You can [see it](https://caracara.hashbase.io/) for yourself.
 
-In particular, when we say `web app` we are talking about PWAs where offline
-support is something that comes first and it is a key feature, common in the decentralized world. The addition of Dat plays a part on the efficient _spreading_ of the content between peers.
+In particular,
+when we say web app we are talking about PWAs where offline support is
+something that comes first and although it is not a key feature, it is common
+in the decentralized world. The addition of Dat plays a part in the efficient
+spreading of the content among peers.
 
-All in all, we at [GEUT](https://github.com/geut) believe that it is worth the effort of exploring these combinations.
+All in all, we at [GEUT](https://github.com/geut) believe that it is
+worth the effort of exploring these combinations.
 
 #### Start
 
-Remember, our goal is to create a simple collaborative text editor. This means, peer A writes some text, shares the copy with other peer, call it B, automatically authorizing B to be a new writer.
+Remember, our goal is to create a simple collaborative text editor. This means, peer **A** writes some text, shares the copy with other peer, call it **B**, automatically authorizing **B** to be a new writer.
 
-OK, let's start with the bootstrap of our web app. We are going to be using [React](https://reactjs.org/) for this matter. More specifically, `create-react-app` to make things quicker.
+OK, let's start with the bootstrap of our web app. We are going to be using [React](https://reactjs.org/) for this matter. More specifically, `create-react-app` to make things more quickly.
 
 `npx create-react-app caracara`
 
@@ -57,17 +64,17 @@ OK, let's start with the bootstrap of our web app. We are going to be using [Rea
 
  `cd caracara && npm start`
 
- Cool, the app is running locally. We are going to add a new module now, called `@geut/saga`. This will give P2P powers to our app. :sparkles:
+ Cool, the app is running locally now. We are going to add a new module called [`@geut/saga`](https://github.com/geut/saga). This will give P2P "powers" to our app. :sparkles:
 
  #### Saga
 
- `Saga` is a helper module developed by GEUT, that you can use to easily share operations between peers. You can think about this, like _applications chatting each other_. On top of this, we can do whatever we want with the operations, in this case will be to _regenerate_ the document history on every peer when a new operation arrives. Since `saga` will help us to establish a connection and exchange messages with other peers we need to see how can it play with our app.
+ `Saga` is a helper module developed by GEUT, that you can use to easily share operations between peers. You can think about this, like _applications chatting each other_. On top of this, we can do whatever we want with the operations. In this case, the meaning of the operation will be to _regenerate_ the document history in every peer. Since `saga` will help us to establish a connection and exchange messages with other peers we need to see how it works.
 
 First, install the dependencies:
 
 `npm install @geut/saga @geut/discovery-swarm-webrtc`
 
-Now we need to create a connection, this would allow us to talk with a _swarm_ of peers:
+Now we need to create a connection, this will allow us to talk with a _swarm_ of peers:
 
 This is an extract of [swarm.js](src/p2p/swarm.js)
 ```javascript
@@ -106,7 +113,7 @@ sw.on('connection', async peer => {
 });
 ```
 
-That are the important bits of the swarm creation. Now, let's see how we use this inside our app.
+These are the important bits of the swarm creation. Now, let's see how we use this inside our app.
 
 ```javascript
   async componentDidUpdate(prevProps, prevState) {
@@ -122,7 +129,7 @@ That are the important bits of the swarm creation. Now, let's see how we use thi
 
 #### The editor
 
-Great! We've just seen the swarm creation phase and we also have connect it with our app. Now it's time to start playing a bit with the editor.
+Great! We've just achieved the swarm creation phase and we have also shown how to connect `saga` with our app. Now it's time to start playing a bit with the editor.
 
 There are two new important dependencies at this step:
 
@@ -162,15 +169,16 @@ componentWillUnmount() {
 }
 ```
 
-At component's mount we setup `saga` to be listening for new operations. In our case, operations are `Automerge` changes. When one arrives, we apply them. There is a special case which is document creation that does not have past history, thus why we use `Automerge.init()`, otherwise we use or previous state: `this.doc`.
+At component's mount we setup `saga` to be listening to new operations. In our case, operations are `Automerge` changes. As soon as an operation arrives, we apply it. (There is a special case which is the  document creation, that's why we use `Automerge.init()`, instead of the previous state: `this.doc`)
 
-The next important part is the `updatePeerValue` function. For the sake of simplicity we are not using anything extra to maintain state, so we will be passing down this function to our child component, the Editor. The Editor maintains a simple textarea component, as you can imagine when the textarea changes, that will trigger our `updatePeerValue` function.
+
+Next, we have the `updatePeerValue` function. For the sake of simplicity we are not using anything extra to maintain state. So, we will be passing down this function to our child component: the Editor. The Editor maintains a simple textarea component, as you can imagine when the textarea changes, that will trigger our `updatePeerValue` function.
 
 We will use two important libraries:
-  - [Automerge](https://github.com/automerge/automerge), will handle document transformations. It will give us changes that we can apply later. Automerge help us maintain a [CRDT](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type) data structure, this is super useful when doing collaborative work :cool:.
-  - [diff-match-patch](https://github.com/google/diff-match-patch): is an excellent library from Google that we are going to use to differentiate the type of changes between previous and current text state. This in conjunction with Automerge creates a pretty solid strategy for handling and distributing changes without conflicts over a network, a decentralized one in our case.
+  - [Automerge](https://github.com/automerge/automerge) will handle document transformations. It will give us changes that we can apply later. Automerge helps us maintain a [CRDT](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type) data structure, this is super useful when doing collaborative work :cool:.
+  - [diff-match-patch](https://github.com/google/diff-match-patch) is an excellent library from Google that we are going to use to differentiate the type of changes between previous and current text state. This in conjunction with Automerge creates a pretty solid strategy for handling and distributing changes without conflicts over a network, a decentralized one in our case.
 
-Now let's go through the `updatePeerValue` function because it does _some_ things.
+Now let's go through the `updatePeerValue` function because it does several things actually.
 
 ```javascript
 updatePeerValue = val => {
@@ -269,9 +277,9 @@ updatePeerValue = val => {
 };
 ```
 
-Last but not least, the editor, this is the most simplest piece of the whole project.
+Last but not least, the editor, this is the simplest piece of the whole project.
 
-The important bits below:
+Here are the important bits.
 
 ```javascript
 debouncedPeerValue = debounce(({ text }) => {
@@ -289,31 +297,33 @@ onChange = e => {
 };
 ```
 
-The editor renders a textarea component with an `onChange` function attached to it. The `onChange` function updates the local value and call the `updatePeerValue` function that we just saw. We also added a debounce function to improve the UX a little bit.
+The editor renders a textarea component with an `onChange` function attached to it. The `onChange` function updates the local value and call the `updatePeerValue` function that we have just seen. We also added a debounce function to improve the UX a little bit.
 
 #### Caveats
 
-The app is not _totally_ decentralized. It is good to know this from the beginning. We need to use some signaling servers to bootstrap the discovery of peers. From that point and later the communication is between peers. Another _centralized_ moment is the first download of the app. This can be a github page, a CDN or whatever thing that you want to use. Again, if the app works as a PWA with offline support, additional downloads won't be necessary.
+The app is not totally decentralized. It is good to know this from the very beginning. We need to use some signaling servers to bootstrap the discovery of peers. From that point onwards, the communication is among peers. Another _centralized_ moment is the first download of the app. This can be a github page, a CDN or whatever you want to use. Again, if the app works as a PWA with offline support, additional downloads will not be necessary.
 
 
 #### Conclusions
 
-We just tour the development of a **Dat powered web app**. Let's summarize the important parts:
+We have just dealt with the development of a **Dat powered web app**. Let's summarize the important parts:
 
-1. Install and instantiate `saga`. This will be a top level interface on top of `hyperdb`.
-1. Create the swarm. This is useful to find another peers. Since we are creating a webapp we will be relying on WebRTC for peer to peer communication. A signal server will be required then. You can host your own if you want to. This is [the one](https://github.com/soyuka/signalhubws) we recommend these days.
-1. After `saga` instantiation and swarm creation, we can start playing with our app. :tada:
+1. Install and instantiate `saga`. This is a top level interface on top of `hyperdb`.
+2. Create the swarm. This is useful to find another peers. Since we are creating a webapp we will be relying on WebRTC for peer to peer communication. A signal server will be required then. You can host your own if you want to. This is [the one](https://github.com/soyuka/signalhubws) we recommend these days.
+3. After `saga` instantiation and swarm creation, we can start playing with our app. :tada:
   1. Since we were after a collaborative editor, two modules appear as a good choice here: `Automerge` and `diff-match-patch`.
-  1. We will share operations that we get from [Automerge](https://github.com/automerge/automerge#sending-and-receiving-changes) changes.
-  1. `diff-match-patch` is used to extract `deltas` from plain text.
-1. That's all! :+1:
+  2. We will share operations that we get from [Automerge](https://github.com/automerge/automerge#sending-and-receiving-changes) changes.
+  3. `diff-match-patch` is used to extract `deltas` from plain text.
+4. That's all! :+1:
 
-As you can see, thinking about sharing operations between peers opens the possibilities for new kind of applications and also makes things a bit easier. Looks like a win-win situation.
+As you can see, thinking about sharing operations among peers opens the possibilities for new kind of applications and also makes things a bit easier. Looks like a win-win situation.
 
-I hope this article helps you to start thinking on new possibilities and start using Dat on the web!
+I hope this article helps you to start thinking on new possibilities and give it a try to use Dat on the web!
 
 **Thanks!** :bird:
 
 > If you want to contribute please create an issue with your suggestion and we can continue the discussion from there. :+1:
+
+> Also, :star: is :heart: Well, not really ...but is cool. And you are cool. :sunglasses:
 ___
 Brought to you by **GEUT LABS ʘ**
