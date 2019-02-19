@@ -9,13 +9,12 @@ class Editor extends Component {
       value: props.text || '',
       selectionStart: -1
     };
-    this.taRef = React.createRef();
   }
 
   componentDidUpdate(prevProps, prevState) {
     if (prevProps.text === this.state.text) return;
     if (this.state.selectionStart !== -1) {
-      this.setCaretToPos(this.taRef.current, this.state.selectionStart);
+      this.setCaretToPos(this.taRef, this.state.selectionStart);
     }
   }
 
@@ -36,7 +35,7 @@ class Editor extends Component {
 
     return (
       <TextField
-        ref={this.taRef}
+        inputRef={input => (this.taRef = input)}
         id="outlined-multiline-static"
         label="Editor"
         multiline

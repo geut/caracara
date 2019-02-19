@@ -148,7 +148,7 @@ class App extends Component {
                         </Typography>
                         <Typography align="center" variant="h6" noWrap={true}>
                           {this.state.username
-                            ? `Welcome ${this.state.username}`
+                            ? `Welcome, ${this.state.username}!`
                             : ''}
                         </Typography>
                         <Fab
