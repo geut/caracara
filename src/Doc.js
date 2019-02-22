@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import MarkdownPreview from './Editor';
+import Editor from './Editor';
 import Automerge from 'automerge';
 import Typography from '@material-ui/core/Typography';
 import List from '@material-ui/core/List';
@@ -18,7 +18,6 @@ class Doc extends Component {
       text: '',
       localHistory: []
     };
-
     // save doc in localStorage
     // Note(dk): add support for reading an old doc, or better to select the doc to use :)
     this.original = undefined;
@@ -43,10 +42,10 @@ class Doc extends Component {
         this.original = operation.original;
       }
       this.doc = newDoc;
-      this.setState({
+      this.setState(prevState => ({
         text: newDoc.text.join(''),
         localHistory: [...this.state.localHistory, operation.diff]
-      });
+      }));
     });
   }
 
@@ -134,7 +133,7 @@ class Doc extends Component {
             },
             () => {
               console.log('>>> this.doc text', this.doc.text.join(''));
-              // NOTE(dk): here we are sharing changes we made locally with our peers.
+              // NOTE(dk): here we are sharingwith our peers changes we have made locally.
               comm.writeOperation({
                 peerValue: changes,
                 username,
@@ -148,15 +147,16 @@ class Doc extends Component {
   };
 
   render() {
-    const { classes } = this.props;
+    const { classes, draftId } = this.props;
 
     return (
       <>
         <div className={classes.editor}>
-          <MarkdownPreview
+          <Editor
             text={this.state.text}
             classes={classes.textField}
             updatePeerValue={this.updatePeerValue}
+            isAuthor={!draftId}
           />
         </div>
         <aside className={classes.history}>

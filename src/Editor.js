@@ -7,31 +7,13 @@ class Editor extends Component {
     super(props);
     this.state = {
       value: props.text || '',
-      selectionStart: -1
+      selectionStart: -1,
+      isLocalUpdate: false
     };
   }
 
-  componentDidUpdate(prevProps, prevState) {
-    if (prevProps.text === this.state.text) return;
-    if (this.state.selectionStart !== -1) {
-      this.setCaretToPos(this.taRef, this.state.selectionStart);
-    }
-  }
-
-  static getDerivedStateFromProps(props, state) {
-    if (props.text !== state.value) {
-      return { value: props.text };
-    }
-    return null;
-  }
-
-  shouldComponenUpdate(nextProps, nextState) {
-    if (nextProps.text === this.state.text) return false;
-    return true;
-  }
-
   render() {
-    const { classes } = this.props;
+    const { classes, text, isAuthor } = this.props;
 
     return (
       <TextField
@@ -44,8 +26,9 @@ class Editor extends Component {
         className={classes}
         margin="normal"
         variant="outlined"
+        disabled={!text && !isAuthor}
         onChange={this.onChange}
-        value={this.state.value}
+        value={text}
         autoComplete={'off'}
         autoFocus={true}
       />
@@ -71,16 +54,27 @@ class Editor extends Component {
 
   debouncedPeerValue = debounce(({ text }) => {
     this.props.updatePeerValue({ text });
-  }, 20);
+  }, 2000);
 
   onChange = e => {
     const { value, selectionStart } = e.target;
-
-    this.setState({
-      value,
-      selectionStart
-    });
-    this.debouncedPeerValue({ text: value });
+    console.log({ value });
+    this.setState(
+      {
+        value,
+        selectionStart
+      },
+      () => {
+        if (this.state.selectionStart !== -1) {
+          this.setCaretToPos(this.taRef, this.state.selectionStart);
+        }
+      }
+    );
+    this.props.updatePeerValue({ text: value });
+    // Note(dk): a deboung will be better to not overload network
+    // but is making things difficult with the UX.
+    // Im going to revisit this strategy later, it requires a big refactor.
+    // this.debouncedPeerValue({ text: value });
   };
 }
 
