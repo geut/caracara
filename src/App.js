@@ -41,9 +41,6 @@ const styles = theme => ({
   grow: {
     flexGrow: 1
   },
-  fab: {
-    margin: theme.spacing.unit
-  },
   toolbar: {
     alignItems: 'center',
     justifyContent: 'space-between'
@@ -137,16 +134,16 @@ class App extends Component {
                   <>
                     <AppBar position="static">
                       <Toolbar className={classes.toolbar}>
-                        <Typography variant="h5" color="inherit">
+                        <Typography variant="h6" color="inherit">
                           Caracara &nbsp;
                           <span
                             role="img"
-                            aria-label="caracara bird using a emoji"
+                            aria-label="caracara bird using an emoji"
                           >
                             🐧
                           </span>
                         </Typography>
-                        <Typography align="center" variant="h6" noWrap={true}>
+                        <Typography align="center" variant="h6">
                           {this.state.username
                             ? `Welcome, ${this.state.username}!`
                             : ''}
@@ -155,10 +152,11 @@ class App extends Component {
                           color="secondary"
                           onClick={this.copy}
                           aria-label="Share your doc"
-                          className={classes.fab}
                           size="medium"
+                          variant="extended"
                         >
                           <FileCopy className={classes.icon} />
+                          Share
                         </Fab>
                       </Toolbar>
                     </AppBar>
