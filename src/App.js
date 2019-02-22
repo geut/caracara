@@ -1,22 +1,15 @@
 import React, { Component } from 'react';
-import { BrowserRouter as Router, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
+
 // Material-UI
 import Modal from '@material-ui/core/Modal';
 import { withStyles } from '@material-ui/core/styles';
-import AppBar from '@material-ui/core/AppBar';
-import Toolbar from '@material-ui/core/Toolbar';
-import Typography from '@material-ui/core/Typography';
-import Fab from '@material-ui/core/Fab';
-import FileCopy from '@material-ui/icons/FileCopy';
-import 'typeface-roboto';
 
 import withRoot from './withRoot';
-
-import copy from 'copy-to-clipboard';
-//import Clip from './icons/clipboard';
-import Doc from './Doc';
-import swarm from './p2p/swarm';
-import Username from './Username';
+import Document from './containers/Document';
+import DocumentTitleBar from './containers/DocumentTitleBar';
+import Layout from './components/Layout';
+import Username from './components/Username';
 
 const styles = theme => ({
   root: {
@@ -41,50 +34,18 @@ const styles = theme => ({
   grow: {
     flexGrow: 1
   },
-  toolbar: {
-    alignItems: 'center',
-    justifyContent: 'space-between'
-  },
-  editor: {
-    flex: '1 0 30%',
-    height: '100vh'
-  },
-  history: {
-    flex: '0 0 25%'
-  },
-  textField: {
-    marginLeft: theme.spacing.unit,
-    marginRight: theme.spacing.unit,
-    display: 'flex'
-  },
-  title: {
-    margin: `${theme.spacing.unit}px ${theme.spacing.unit * 4}px 0 ${theme
-      .spacing.unit * 2}px`
-  },
-  historyItems: {
-    maxHeight: '50vh',
-    overflow: 'auto'
-  },
   icon: {
     fontSize: 24
   }
 });
 
 class App extends Component {
-  constructor() {
-    super();
-
-    this.comm = null;
-    this.state = {
-      commReady: false,
-      modalIsOpen: true,
-      username: ''
-    };
-
-    this.url = window.location.protocol + '//' + window.location.host;
-    this.params = new URLSearchParams(window.location.search);
-    this.draftId = this.params.get('draft');
-  }
+  comm = null;
+  state = {
+    commReady: false,
+    modalIsOpen: true,
+    username: ''
+  };
 
   saveUsername = e => {
     const { target } = e;
@@ -100,79 +61,50 @@ class App extends Component {
 
     if (prevState.modalIsOpen && !modalIsOpen && username) {
       // username has been set
-      this.comm = await swarm(username, this.draftId);
       this.setState({
         commReady: true
       });
     }
   }
 
-  copy = e => {
-    e.preventDefault();
-    copy(`${this.url}?draft=${this.comm.db.key.toString('hex')}`);
-  };
-
   render(props) {
-    const { modalIsOpen, commReady } = this.state;
+    const { modalIsOpen, commReady, username } = this.state;
     const { classes } = this.props;
 
     return (
-      <div className={classes.root}>
-        <Modal open={this.state.modalIsOpen} disableEscapeKeyDown={true}>
-          <Username
-            classes={classes.paper}
-            closeModal={this.closeModal}
-            saveUsername={this.saveUsername}
-          />
-        </Modal>
-        <Router>
-          {!modalIsOpen && commReady ? (
-            <Route
-              path="/"
-              render={props => {
-                return (
-                  <>
-                    <AppBar position="static">
-                      <Toolbar className={classes.toolbar}>
-                        <Typography variant="h6" color="inherit">
-                          Caracara &nbsp;
-                          <span
-                            role="img"
-                            aria-label="caracara bird using an emoji"
-                          >
-                            🐧
-                          </span>
-                        </Typography>
-                        <Typography align="center" variant="h6">
-                          {this.state.username
-                            ? `Welcome, ${this.state.username}!`
-                            : ''}
-                        </Typography>
-                        <Fab
-                          color="secondary"
-                          onClick={this.copy}
-                          aria-label="Share your doc"
-                          size="medium"
-                          variant="extended"
-                        >
-                          <FileCopy className={classes.icon} />
-                          Share
-                        </Fab>
-                      </Toolbar>
-                    </AppBar>
-                    <Doc
-                      username={this.state.username}
-                      comm={this.comm}
-                      draftId={this.draftId}
-                      classes={classes}
-                    />
-                  </>
-                );
-              }}
+      <Router>
+        <div className={classes.root}>
+          <Modal open={this.state.modalIsOpen} disableEscapeKeyDown={true}>
+            <Username
+              classes={classes.paper}
+              closeModal={this.closeModal}
+              onUsernameChange={this.saveUsername}
             />
-          ) : null}
-        </Router>
-      </div>
+          </Modal>
+          {!modalIsOpen && commReady && (
+            <Layout
+              username={username}
+              titleBar={
+                <Switch>
+                  <Route
+                    path="/:draftId?"
+                    render={props => (
+                      <DocumentTitleBar {...props} username={username} />
+                    )}
+                  />
+                </Switch>
+              }
+            >
+              <Switch>
+                <Route
+                  path="/:draftId?"
+                  render={props => <Document {...props} username={username} />}
+                />
+              </Switch>
+            </Layout>
+          )}
+        </div>
+      </Router>
     );
   }
 }

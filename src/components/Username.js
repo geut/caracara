@@ -16,21 +16,25 @@ function getModalStyle() {
 
 const Username = props => (
   <div style={getModalStyle()} className={props.classes}>
-    <form onSubmit={props.closeModal}>
-      <Typography variant="subtitle1" gutterBottom>
-        Set your username
-      </Typography>
-      <TextField
-        required
-        label="Username"
-        fullWidth={true}
-        margin="normal"
-        onChange={props.saveUsername}
-      />
-      <Button variant="contained" color="primary" type="submit">
-        Enter
-      </Button>
-    </form>
+    <Typography variant="subtitle1" gutterBottom>
+      Set your username
+    </Typography>
+    <TextField
+      required
+      label="Username"
+      fullWidth={true}
+      margin="normal"
+      onChange={props.onUsernameChange}
+      onKeyDown={e => e.key === 'ENTER' && props.closeModal()}
+    />
+    <Button
+      variant="contained"
+      color="primary"
+      type="submit"
+      onClick={props.closeModal}
+    >
+      Enter
+    </Button>
   </div>
 );
 

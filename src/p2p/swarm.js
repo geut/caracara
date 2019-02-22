@@ -4,6 +4,8 @@ import ram from 'random-access-memory';
 import swarm from '@geut/discovery-swarm-webrtc';
 import signalhub from 'signalhubws';
 
+import React, { Component } from 'react';
+
 // P2P DEFAULTS
 const webrtcOpts = {
   config: {
@@ -55,3 +57,21 @@ const initComm = async (username, key) => {
 };
 
 export default initComm;
+
+export const withSwarm = WrappedComponent => {
+  return class extends Component {
+    static displayName = `WithSwarm${WrappedComponent.displayName}`;
+    state = {
+      swarm: null
+    };
+    async componentDidMount() {
+      const { username, draftId = null } = this.props;
+      const comm = await initComm(username, draftId);
+      this.setState({ swarm: comm });
+    }
+    render() {
+      const { swarm } = this.state;
+      return <WrappedComponent {...this.props} swarm={swarm} />;
+    }
+  };
+};
