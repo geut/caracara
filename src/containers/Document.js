@@ -2,10 +2,9 @@ import React, { Component } from 'react';
 import { withRouter } from 'react-router-dom';
 import Automerge from 'automerge';
 
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemText from '@material-ui/core/ListItemText';
-import Typography from '@material-ui/core/Typography';
+import AppBar from '@material-ui/core/AppBar';
+import Tabs from '@material-ui/core/Tabs';
+import Tab from '@material-ui/core/Tab';
 import { withStyles } from '@material-ui/core/styles';
 
 import DiffMatchPatch from 'diff-match-patch';
@@ -13,6 +12,8 @@ import tinydate from 'tinydate';
 
 import { withSwarm } from '../p2p/swarm';
 import Editor from '../components/Editor';
+import History from '../components/History';
+import Collaborators from '../components/Collaborators';
 
 const styles = theme => ({
   root: {
@@ -28,14 +29,18 @@ const styles = theme => ({
     margin: `${theme.spacing.unit}px ${theme.spacing.unit * 4}px 0 ${theme
       .spacing.unit * 2}px`
   },
-  history: {
+  aside: {
     flex: 1,
     display: 'flex',
-    flexDirection: 'column'
+    flexDirection: 'column',
+    borderLeft: `1px solid ${theme.palette.grey[500]}`
   },
-  historyItems: {
+  items: {
     overflow: 'auto',
     flex: 1
+  },
+  tabHeader: {
+    backgroundColor: theme.palette.grey[200]
   }
 });
 
@@ -46,7 +51,9 @@ class Document extends Component {
     peerValue: {},
     text: '',
     localHistory: [],
-    swarmReady: false
+    collaborators: [],
+    swarmReady: false,
+    tabValue: 0
   };
 
   dmp = new DiffMatchPatch();
@@ -64,6 +71,14 @@ class Document extends Component {
   componentDidUpdate() {
     const { swarm } = this.props;
     if (!swarm) return;
+
+    swarm.on('join', data => {
+      console.log('NEW COLLABORATOR', data);
+      const { username } = data;
+      this.setState({
+        collaborators: [...this.state.collaborators, username]
+      });
+    });
 
     swarm.on('operation', data => {
       const { username, operation } = data;
@@ -187,9 +202,13 @@ class Document extends Component {
     });
   };
 
+  handleTabChange = (event, value) => {
+    this.setState({ tabValue: value });
+  };
+
   render() {
     const { classes, draftId } = this.props;
-    const { swarmReady } = this.state;
+    const { swarmReady, tabValue, localHistory, collaborators } = this.state;
 
     return (
       swarmReady && (
@@ -201,25 +220,24 @@ class Document extends Component {
               isAuthor={!draftId}
             />
           </div>
-          <aside className={classes.history}>
-            <Typography
-              color="textSecondary"
-              variant="subtitle1"
-              className={classes.title}
-            >
-              History
-            </Typography>
-            <List dense className={classes.historyItems}>
-              {[...this.state.localHistory].reverse().map((h, i) => {
-                const [user, ...rest] = h.replace(' - ', ' ').split(' ');
-                const msg = rest.join(' ');
-                return (
-                  <ListItem key={`history-${i}`}>
-                    <ListItemText primary={user} secondary={msg} />
-                  </ListItem>
-                );
-              })}
-            </List>
+          <aside className={classes.aside}>
+            <AppBar position="static" classes={{ root: classes.tabHeader }}>
+              <Tabs
+                value={tabValue}
+                onChange={this.handleTabChange}
+                textColor="primary"
+                indicatorColor="primary"
+              >
+                <Tab label="History" />
+                <Tab label="Collaborators" />
+              </Tabs>
+            </AppBar>
+            {tabValue === 0 && (
+              <History history={localHistory} classes={classes} />
+            )}
+            {tabValue === 1 && (
+              <Collaborators users={collaborators} classes={classes} />
+            )}
           </aside>
         </div>
       )
