@@ -15,7 +15,11 @@ function getModalStyle() {
 }
 
 const Username = props => (
-  <div style={getModalStyle()} className={props.classes}>
+  <div
+    style={getModalStyle()}
+    className={props.classes}
+    onKeyDown={e => e.key === 'Enter' && props.closeModal()}
+  >
     <Typography variant="subtitle1" gutterBottom>
       Set your username
     </Typography>
@@ -25,7 +29,6 @@ const Username = props => (
       fullWidth={true}
       margin="normal"
       onChange={props.onUsernameChange}
-      onKeyDown={e => e.key === 'ENTER' && props.closeModal()}
     />
     <Button
       variant="contained"
