@@ -44,15 +44,21 @@ class App extends Component {
   state = {
     commReady: false,
     modalIsOpen: true,
+    modalError: false,
     username: ''
   };
 
   saveUsername = e => {
     const { target } = e;
-    this.setState({ username: target.value });
+    this.setState({ username: target.value, modalError: false });
   };
 
   closeModal = () => {
+    const { username } = this.state;
+    if (!username) {
+      this.setState({ modalError: true });
+      return;
+    }
     this.setState({ modalIsOpen: false });
   };
 
@@ -68,7 +74,7 @@ class App extends Component {
   }
 
   render(props) {
-    const { modalIsOpen, commReady, username } = this.state;
+    const { modalIsOpen, commReady, username, modalError } = this.state;
     const { classes } = this.props;
 
     return (
@@ -79,6 +85,7 @@ class App extends Component {
               classes={classes.paper}
               closeModal={this.closeModal}
               onUsernameChange={this.saveUsername}
+              error={modalError}
             />
           </Modal>
           {!modalIsOpen && commReady && (

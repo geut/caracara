@@ -25,10 +25,12 @@ const Username = props => (
     </Typography>
     <TextField
       required
+      error={props.error}
       label="Username"
       fullWidth={true}
       margin="normal"
       onChange={props.onUsernameChange}
+      helperText={props.error ? 'Username is required' : ''}
     />
     <Button
       variant="contained"
