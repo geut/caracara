@@ -15,15 +15,17 @@ const History = props => (
       History
     </Typography>
     <List dense className={props.classes.items}>
-      {[...props.history].reverse().map((h, i) => {
-        const [user, ...rest] = h.replace(' - ', ' ').split(' ');
-        const msg = rest.join(' ');
-        return (
-          <ListItem key={`history-${i}`}>
-            <ListItemText primary={user} secondary={msg} />
-          </ListItem>
-        );
-      })}
+      {props.history.length
+        ? [...props.history].reverse().map((h, i) => {
+            const [user, ...rest] = h.replace(' - ', ' ').split(' ');
+            const msg = rest.join(' ');
+            return (
+              <ListItem key={`history-${i}`}>
+                <ListItemText primary={user} secondary={msg} />
+              </ListItem>
+            );
+          })
+        : ''}
     </List>
   </>
 );

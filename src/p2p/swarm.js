@@ -57,7 +57,7 @@ const initComm = async (username, key) => {
 };
 
 export default initComm;
-
+/*
 export const withSwarm = WrappedComponent => {
   return class extends Component {
     static displayName = `WithSwarm${WrappedComponent.displayName}`;
@@ -75,3 +75,8 @@ export const withSwarm = WrappedComponent => {
     }
   };
 };
+*/
+
+const SwarmContext = React.createContext(null);
+
+export { SwarmContext };

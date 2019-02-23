@@ -6,7 +6,7 @@ import Modal from '@material-ui/core/Modal';
 import { withStyles } from '@material-ui/core/styles';
 
 import withRoot from './withRoot';
-import Document from './containers/Document';
+import ConnectedDocument from './containers/Document';
 import DocumentTitleBar from './containers/DocumentTitleBar';
 import Layout from './components/Layout';
 import Username from './components/Username';
@@ -89,26 +89,18 @@ class App extends Component {
             />
           </Modal>
           {!modalIsOpen && commReady && (
-            <Layout
-              username={username}
-              titleBar={
-                <Switch>
-                  <Route
-                    path="/:draftId?"
-                    render={props => (
-                      <DocumentTitleBar {...props} username={username} />
-                    )}
-                  />
-                </Switch>
-              }
-            >
-              <Switch>
-                <Route
-                  path="/:draftId?"
-                  render={props => <Document {...props} username={username} />}
-                />
-              </Switch>
-            </Layout>
+            <Switch>
+              <Route
+                path="/:draftId?"
+                render={props => {
+                  return (
+                    <Layout {...props} username={username}>
+                      <ConnectedDocument username={username} />
+                    </Layout>
+                  );
+                }}
+              />
+            </Switch>
           )}
         </div>
       </Router>

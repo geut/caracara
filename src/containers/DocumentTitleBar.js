@@ -7,7 +7,7 @@ import Tooltip from '@material-ui/core/Tooltip';
 
 import FileCopy from '@material-ui/icons/FileCopy';
 
-import { withSwarm } from '../p2p/swarm';
+import { SwarmContext } from '../p2p/swarm';
 
 class TitleBar extends Component {
   static getDerivedStateFromProps({ swarm }) {
@@ -41,9 +41,23 @@ class TitleBar extends Component {
   }
 }
 
+class ConnectedTitleBar extends Component {
+  render() {
+    return (
+      <SwarmContext.Consumer>
+        {swarm => <TitleBar {...this.props} swarm={swarm} />}
+      </SwarmContext.Consumer>
+    );
+  }
+}
+
+export default ConnectedTitleBar;
+
+/*
 const SwarmTitleBar = withSwarm(TitleBar);
 export default withRouter(
   ({ username, match: { params: { draftId } } = {} }) => (
     <SwarmTitleBar username={username} draftId={draftId} />
   )
 );
+*/

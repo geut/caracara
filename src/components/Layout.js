@@ -5,6 +5,9 @@ import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 
+import ConnectedTitleBar from '../containers/DocumentTitleBar';
+import initComm, { SwarmContext } from '../p2p/swarm';
+
 const styles = theme => ({
   root: {
     height: '100vh',
@@ -23,26 +26,43 @@ const styles = theme => ({
 });
 
 class Layout extends Component {
+  state = {
+    swarmReady: false
+  };
+
+  async componentDidMount() {
+    const { username, match } = this.props;
+    const swarm = await initComm(username, match.params.draftId);
+    this.setState({
+      swarmReady: true,
+      swarm
+    });
+  }
+
   render() {
     const { classes, username, titleBar, children } = this.props;
     return (
-      <div className={classes.root}>
-        <AppBar position="static">
-          <Toolbar className={classes.toolbar}>
-            <Typography variant="h6" color="inherit">
-              Caracara &nbsp;
-              <span role="img" aria-label="caracara bird using an emoji">
-                🐧
-              </span>
-            </Typography>
-            <Typography align="center" variant="h6" color="inherit">
-              {username ? `Welcome, ${username}!` : ''}
-            </Typography>
-            {titleBar}
-          </Toolbar>
-        </AppBar>
-        <div className={classes.content}>{children}</div>
-      </div>
+      <SwarmContext.Provider
+        value={this.state.swarmReady ? this.state.swarm : null}
+      >
+        <div className={classes.root}>
+          <AppBar position="static">
+            <Toolbar className={classes.toolbar}>
+              <Typography variant="h6" color="inherit">
+                Caracara &nbsp;
+                <span role="img" aria-label="caracara bird using an emoji">
+                  🐧
+                </span>
+              </Typography>
+              <Typography align="center" variant="h6" color="inherit">
+                {username ? `Welcome, ${username}!` : ''}
+              </Typography>
+              <ConnectedTitleBar />
+            </Toolbar>
+          </AppBar>
+          <div className={classes.content}>{children}</div>
+        </div>
+      </SwarmContext.Provider>
     );
   }
 }

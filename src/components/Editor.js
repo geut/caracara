@@ -105,7 +105,6 @@ class Editor extends Component {
 
   onChange = e => {
     const { value, selectionStart } = e.target;
-    console.log({ value });
     this.setState(
       {
         value,

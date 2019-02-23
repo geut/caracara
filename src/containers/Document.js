@@ -10,10 +10,10 @@ import { withStyles } from '@material-ui/core/styles';
 import DiffMatchPatch from 'diff-match-patch';
 import tinydate from 'tinydate';
 
-import { withSwarm } from '../p2p/swarm';
 import Editor from '../components/Editor';
 import History from '../components/History';
 import Collaborators from '../components/Collaborators';
+import { SwarmContext } from '../p2p/swarm';
 
 const styles = theme => ({
   root: {
@@ -58,6 +58,7 @@ class Document extends Component {
 
   dmp = new DiffMatchPatch();
   original = undefined;
+  attachedEvents = false;
 
   static getDerivedStateFromProps({ swarm }) {
     if (swarm !== null) {
@@ -71,6 +72,9 @@ class Document extends Component {
   componentDidUpdate() {
     const { swarm } = this.props;
     if (!swarm) return;
+
+    // Note(dk): dirty tweak :( Since swarm creation is async didMount did not help here :'(
+    if (this.attachedEvents) return;
 
     swarm.on('join', data => {
       console.log('NEW COLLABORATOR', data);
@@ -102,6 +106,7 @@ class Document extends Component {
         localHistory: [...this.state.localHistory, operation.diff]
       }));
     });
+    this.attachedEvents = true;
   }
 
   componentWillUnmount() {
@@ -128,7 +133,7 @@ class Document extends Component {
         peerValue: creationChange,
         username,
         original: this.original,
-        diff: [`${username} created the doc - ${stamp(new Date(Date.now()))}`]
+        diff: `${username} created the doc - ${stamp(new Date(Date.now()))}`
       });
     }
 
@@ -245,10 +250,25 @@ class Document extends Component {
   }
 }
 
+//export default withStyles(styles)(Document);
+
+class ConnectedDocument extends Component {
+  render() {
+    return (
+      <SwarmContext.Consumer>
+        {swarm => <Document {...this.props} swarm={swarm} />}
+      </SwarmContext.Consumer>
+    );
+  }
+}
+
+export default withStyles(styles)(ConnectedDocument);
+
+/*
 //TODO(elmasse): Make it prettier.
-const SwarmDocument = withSwarm(withStyles(styles)(Document));
 export default withRouter(
   ({ username, match: { params: { draftId } } = {} }) => (
     <SwarmDocument username={username} draftId={draftId} />
   )
 );
+*/
