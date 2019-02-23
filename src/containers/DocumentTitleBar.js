@@ -43,7 +43,7 @@ class TitleBar extends Component {
 
 const SwarmTitleBar = withSwarm(TitleBar);
 export default withRouter(
-  ({ username, location: { match: { draftId } = {} } }) => (
+  ({ username, match: { params: { draftId } } = {} }) => (
     <SwarmTitleBar username={username} draftId={draftId} />
   )
 );

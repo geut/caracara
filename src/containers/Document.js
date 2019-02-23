@@ -173,7 +173,7 @@ class Document extends Component {
               localHistory: [...this.state.localHistory, changes[0].message]
             },
             () => {
-              console.log('>>> this.doc text', this.doc.text.join(''));
+              console.log('SENDING OPERATION', changes);
               // NOTE(dk): here we are sharingwith our peers changes we have made locally.
               swarm.writeOperation({
                 peerValue: changes,
@@ -230,7 +230,7 @@ class Document extends Component {
 //TODO(elmasse): Make it prettier.
 const SwarmDocument = withSwarm(withStyles(styles)(Document));
 export default withRouter(
-  ({ username, location: { match: { draftId } = {} } }) => (
+  ({ username, match: { params: { draftId } } = {} }) => (
     <SwarmDocument username={username} draftId={draftId} />
   )
 );
