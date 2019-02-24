@@ -23,7 +23,8 @@ const styles = theme => ({
   editor: {
     flex: 4,
     display: 'flex',
-    flexDirection: 'column'
+    flexDirection: 'column',
+    backgroundColor: theme.palette.background.paper
   },
   title: {
     margin: `${theme.spacing.unit}px ${theme.spacing.unit * 4}px 0 ${theme
