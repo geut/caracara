@@ -78,7 +78,7 @@ class App extends Component {
     const { classes } = this.props;
 
     return (
-      <Router>
+      <Router basename="https://caracara.hashbase.io">
         <div className={classes.root}>
           <Modal open={this.state.modalIsOpen} disableEscapeKeyDown={true}>
             <Username
