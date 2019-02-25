@@ -54,6 +54,7 @@ const stamp = tinydate('{HH}:{mm}:{ss}');
 
 class Document extends Component {
   state = {
+    attachedEvents: false,
     peerValue: {},
     text: '',
     localHistory: [],
@@ -64,7 +65,6 @@ class Document extends Component {
 
   dmp = new DiffMatchPatch();
   original = undefined;
-  attachedEvents = false;
 
   static getDerivedStateFromProps({ swarm }) {
     if (swarm !== null) {
@@ -75,12 +75,11 @@ class Document extends Component {
     return null;
   }
 
-  componentDidUpdate() {
+  componentDidMount() {
     const { swarm } = this.props;
     if (!swarm) return;
 
-    // Note(dk): dirty tweak :( Since swarm creation is async didMount did not help here :'(
-    if (this.attachedEvents) return;
+    if (this.state.attachedEvents) return;
 
     swarm.on('join', data => {
       console.log('NEW COLLABORATOR', data);
@@ -112,7 +111,8 @@ class Document extends Component {
         localHistory: [...this.state.localHistory, operation.diff]
       }));
     });
-    this.attachedEvents = true;
+
+    this.setState({ attachedEvents: true });
   }
 
   componentWillUnmount() {
@@ -162,7 +162,7 @@ class Document extends Component {
       patch.diffs.forEach(([operation, changeText]) => {
         switch (operation) {
           case 1: // Insertion
-            historyMessage = `${username} added some text (${changeText}) - ${stamp(
+            historyMessage = `${username} added (${changeText}) - ${stamp(
               new Date(Date.now())
             )}`;
             newDoc = updateAutomerge(this.doc, historyMessage, doc => {
@@ -176,7 +176,7 @@ class Document extends Component {
             newDoc = null;
             break;
           case -1: // Deletion
-            historyMessage = `${username} removed some text (${changeText}) - ${stamp(
+            historyMessage = `${username} removed (${changeText}) - ${stamp(
               new Date(Date.now())
             )}`;
             newDoc = updateAutomerge(this.doc, historyMessage, doc => {
@@ -225,16 +225,21 @@ class Document extends Component {
 
   render() {
     const { classes, username, draftId } = this.props;
-    const { swarmReady, tabValue, localHistory, collaborators } = this.state;
+    const {
+      attachedEvents,
+      tabValue,
+      localHistory,
+      collaborators
+    } = this.state;
 
     return (
       <Layout
         username={username}
         titleBar={
-          swarmReady && (
+          attachedEvents && (
             <CopyToClipboard text={this.sharedLink()}>
               <Tooltip title="Share your Doc">
-                <IconButton disabled={!swarmReady} color="inherit">
+                <IconButton disabled={!attachedEvents} color="inherit">
                   <FileCopy />
                 </IconButton>
               </Tooltip>
@@ -242,7 +247,7 @@ class Document extends Component {
           )
         }
       >
-        {swarmReady && (
+        {attachedEvents && (
           <div className={classes.root}>
             <div className={classes.editor}>
               <Editor
