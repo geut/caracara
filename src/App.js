@@ -1,14 +1,14 @@
 import React, { Component } from 'react';
-import { HashRouter as Router, Switch, Route } from 'react-router-dom';
+import { HashRouter as Router, Route } from 'react-router-dom';
 
 // Material-UI
 import Modal from '@material-ui/core/Modal';
 import { withStyles } from '@material-ui/core/styles';
 
 import withRoot from './withRoot';
-import ConnectedDocument from './containers/Document';
-import Layout from './components/Layout';
+import Document from './containers/Document';
 import Username from './components/Username';
+import { SwarmProvider } from './p2p/swarm';
 
 const styles = theme => ({
   root: {
@@ -77,7 +77,7 @@ class App extends Component {
     const { classes } = this.props;
 
     return (
-      <Router basename="https://caracara.hashbase.io">
+      <Router>
         <div className={classes.root}>
           <Modal open={this.state.modalIsOpen} disableEscapeKeyDown={true}>
             <Username
@@ -88,18 +88,16 @@ class App extends Component {
             />
           </Modal>
           {!modalIsOpen && commReady && (
-            <Switch>
-              <Route
-                path="/:draftId?"
-                render={props => {
-                  return (
-                    <Layout {...props} username={username}>
-                      <ConnectedDocument username={username} />
-                    </Layout>
-                  );
-                }}
-              />
-            </Switch>
+            <Route
+              path="/:draftId?"
+              render={props => {
+                return (
+                  <SwarmProvider {...props} username={username}>
+                    <Document username={username} />
+                  </SwarmProvider>
+                );
+              }}
+            />
           )}
         </div>
       </Router>

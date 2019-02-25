@@ -1,18 +1,24 @@
 import React, { Component } from 'react';
 import Automerge from 'automerge';
+import CopyToClipboard from 'react-copy-to-clipboard';
 
 import AppBar from '@material-ui/core/AppBar';
+import IconButton from '@material-ui/core/IconButton';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
+import Tooltip from '@material-ui/core/Tooltip';
 import { withStyles } from '@material-ui/core/styles';
+
+import FileCopy from '@material-ui/icons/FileCopy';
 
 import DiffMatchPatch from 'diff-match-patch';
 import tinydate from 'tinydate';
 
+import Collaborators from '../components/Collaborators';
 import Editor from '../components/Editor';
 import History from '../components/History';
-import Collaborators from '../components/Collaborators';
-import { SwarmContext } from '../p2p/swarm';
+import Layout from '../components/Layout';
+import { withSwarm } from '../p2p/swarm';
 
 const styles = theme => ({
   root: {
@@ -211,67 +217,67 @@ class Document extends Component {
     this.setState({ tabValue: value });
   };
 
+  sharedLink = () => {
+    const { swarm } = this.props;
+    const { protocol, host, pathname } = window.location;
+    return `${protocol}//${host}${pathname}#/${swarm.db.key.toString('hex')}`;
+  };
+
   render() {
-    const { classes, draftId } = this.props;
+    const { classes, username, draftId } = this.props;
     const { swarmReady, tabValue, localHistory, collaborators } = this.state;
 
     return (
-      swarmReady && (
-        <div className={classes.root}>
-          <div className={classes.editor}>
-            <Editor
-              text={this.state.text}
-              updatePeerValue={this.updatePeerValue}
-              isAuthor={!draftId}
-            />
-          </div>
-          <aside className={classes.aside}>
-            <AppBar position="static" classes={{ root: classes.tabHeader }}>
-              <Tabs
-                value={tabValue}
-                onChange={this.handleTabChange}
-                textColor="primary"
-                indicatorColor="primary"
-              >
-                <Tab label="History" />
-                <Tab label="Collaborators" />
-              </Tabs>
-            </AppBar>
-            {tabValue === 0 && (
-              <History history={localHistory} classes={classes} />
-            )}
-            {tabValue === 1 && (
-              <Collaborators
-                users={Array.from(collaborators)}
-                classes={classes}
+      <Layout
+        username={username}
+        titleBar={
+          swarmReady && (
+            <CopyToClipboard text={this.sharedLink()}>
+              <Tooltip title="Share your Doc">
+                <IconButton disabled={!swarmReady} color="inherit">
+                  <FileCopy />
+                </IconButton>
+              </Tooltip>
+            </CopyToClipboard>
+          )
+        }
+      >
+        {swarmReady && (
+          <div className={classes.root}>
+            <div className={classes.editor}>
+              <Editor
+                text={this.state.text}
+                updatePeerValue={this.updatePeerValue}
+                isAuthor={!draftId}
               />
-            )}
-          </aside>
-        </div>
-      )
+            </div>
+            <aside className={classes.aside}>
+              <AppBar position="static" classes={{ root: classes.tabHeader }}>
+                <Tabs
+                  value={tabValue}
+                  onChange={this.handleTabChange}
+                  textColor="primary"
+                  indicatorColor="primary"
+                >
+                  <Tab label="History" />
+                  <Tab label="Collaborators" />
+                </Tabs>
+              </AppBar>
+              {tabValue === 0 && (
+                <History history={localHistory} classes={classes} />
+              )}
+              {tabValue === 1 && (
+                <Collaborators
+                  users={Array.from(collaborators)}
+                  classes={classes}
+                />
+              )}
+            </aside>
+          </div>
+        )}
+      </Layout>
     );
   }
 }
 
-//export default withStyles(styles)(Document);
-
-class ConnectedDocument extends Component {
-  render() {
-    return (
-      <SwarmContext.Consumer>
-        {swarm => <Document {...this.props} swarm={swarm} />}
-      </SwarmContext.Consumer>
-    );
-  }
-}
-
-export default withStyles(styles)(ConnectedDocument);
-
-/*
-//TODO(elmasse): Make it prettier.
-export default withRouter(
-  ({ username, match: { params: { draftId } } = {} }) => (
-    <SwarmDocument username={username} draftId={draftId} />
-  )
-);
-*/
+export default withSwarm(withStyles(styles)(Document));

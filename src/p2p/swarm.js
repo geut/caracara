@@ -4,7 +4,7 @@ import ram from 'random-access-memory';
 import swarm from '@geut/discovery-swarm-webrtc';
 import signalhub from 'signalhubws';
 
-import React from 'react';
+import React, { Component } from 'react';
 
 // P2P DEFAULTS
 const webrtcOpts = {
@@ -57,26 +57,47 @@ const initComm = async (username, key) => {
 };
 
 export default initComm;
-/*
-export const withSwarm = WrappedComponent => {
-  return class extends Component {
-    static displayName = `WithSwarm${WrappedComponent.displayName}`;
-    state = {
-      swarm: null
-    };
-    async componentDidMount() {
-      const { username, draftId = null } = this.props;
-      const comm = await initComm(username, draftId);
-      this.setState({ swarm: comm });
-    }
-    render() {
-      const { swarm } = this.state;
-      return <WrappedComponent {...this.props} swarm={swarm} />;
-    }
-  };
-};
-*/
 
 const SwarmContext = React.createContext(null);
 
-export { SwarmContext };
+class SwarmProvider extends Component {
+  state = {
+    swarmReady: false
+  };
+
+  async componentDidMount() {
+    const { username, match: { params: { draftId = null } } = {} } = this.props;
+    const swarm = await initComm(username, draftId);
+
+    this.setState({
+      swarm,
+      swarmReady: true
+    });
+  }
+
+  render() {
+    const { swarmReady, swarm } = this.state;
+    const { children } = this.props;
+    return swarmReady ? (
+      <SwarmContext.Provider value={{ swarm }}>
+        {children}
+      </SwarmContext.Provider>
+    ) : null;
+  }
+}
+
+const withSwarm = WrappedComponent => {
+  return class extends Component {
+    static displayName = `WithSwarm${WrappedComponent.displayName}`;
+
+    render() {
+      return (
+        <SwarmContext.Consumer>
+          {({ swarm }) => <WrappedComponent {...this.props} swarm={swarm} />}
+        </SwarmContext.Consumer>
+      );
+    }
+  };
+};
+
+export { SwarmProvider, withSwarm };
