@@ -1,9 +1,15 @@
 import React, { Component } from 'react';
 import Automerge from 'automerge';
 import CopyToClipboard from 'react-copy-to-clipboard';
+import classNames from 'classnames';
 
 import AppBar from '@material-ui/core/AppBar';
+import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
+import ChevronRightIcon from '@material-ui/icons/ChevronRight';
+import Drawer from '@material-ui/core/Drawer';
+import Divider from '@material-ui/core/Divider';
 import IconButton from '@material-ui/core/IconButton';
+import MenuIcon from '@material-ui/icons/Menu';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import Tooltip from '@material-ui/core/Tooltip';
@@ -20,13 +26,15 @@ import History from '../components/History';
 import Layout from '../components/Layout';
 import { withSwarm } from '../p2p/swarm';
 
+const drawerWidth = 300;
+
 const styles = theme => ({
   root: {
     flex: 1,
     display: 'flex'
   },
   editor: {
-    flex: 4,
+    flex: 1,
     display: 'flex',
     flexDirection: 'column',
     backgroundColor: theme.palette.background.paper
@@ -35,18 +43,80 @@ const styles = theme => ({
     margin: `${theme.spacing.unit}px ${theme.spacing.unit * 4}px 0 ${theme
       .spacing.unit * 2}px`
   },
-  aside: {
-    flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    borderLeft: `1px solid ${theme.palette.grey[500]}`
-  },
   items: {
     overflow: 'auto',
     flex: 1
   },
+  layoutExtraIcons: {
+    display: 'inline-flex'
+  },
   tabHeader: {
     backgroundColor: theme.palette.grey[200]
+  },
+  asideBar: {
+    zIndex: theme.zIndex.drawer + 1,
+    transition: theme.transitions.create(['width', 'margin'], {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.leavingScreen
+    })
+  },
+  asideBarShift: {
+    width: `calc(100% - ${drawerWidth}px)`,
+    transition: theme.transitions.create(['width', 'margin'], {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.enteringScreen
+    })
+  },
+  hide: {
+    display: 'none'
+  },
+  drawer: {
+    flexShrink: 0
+  },
+  drawerContent: {
+    overflow: 'hidden',
+    backgroundColor: theme.palette.grey[200],
+    borderLeft: `1px solid ${theme.palette.grey[500]}`,
+    '& > header': {
+      height: '100%'
+    }
+  },
+  drawerOpen: {
+    transition: theme.transitions.create('width', {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.enteringScreen
+    })
+  },
+  drawerClose: {
+    transition: theme.transitions.create('width', {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.leavingScreen
+    }),
+    overflowX: 'hidden',
+    width: theme.spacing.unit * 7 + 1,
+    [theme.breakpoints.up('sm')]: {
+      width: theme.spacing.unit * 9 + 1
+    }
+  },
+  drawerHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    ...theme.mixins.toolbar,
+    justifyContent: 'flex-start'
+  },
+  content: {
+    flexGrow: 1,
+    transition: theme.transitions.create('margin', {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.leavingScreen
+    })
+  },
+  contentShift: {
+    transition: theme.transitions.create('margin', {
+      easing: theme.transitions.easing.easeOut,
+      duration: theme.transitions.duration.enteringScreen
+    }),
+    marginRight: 0
   }
 });
 
@@ -60,7 +130,8 @@ class Document extends Component {
     localHistory: [],
     collaborators: new Set(),
     swarmReady: false,
-    tabValue: 0
+    tabValue: 0,
+    openDrawer: false
   };
 
   dmp = new DiffMatchPatch();
@@ -223,13 +294,22 @@ class Document extends Component {
     return `${protocol}//${host}${pathname}#/${swarm.db.key.toString('hex')}`;
   };
 
+  handleDrawerOpen = () => {
+    this.setState({ openDrawer: true });
+  };
+
+  handleDrawerClose = () => {
+    this.setState({ openDrawer: false });
+  };
+
   render() {
     const { classes, username, draftId } = this.props;
     const {
       attachedEvents,
       tabValue,
       localHistory,
-      collaborators
+      collaborators,
+      openDrawer
     } = this.state;
 
     return (
@@ -237,18 +317,34 @@ class Document extends Component {
         username={username}
         titleBar={
           attachedEvents && (
-            <CopyToClipboard text={this.sharedLink()}>
-              <Tooltip title="Share your Doc">
-                <IconButton disabled={!attachedEvents} color="inherit">
-                  <FileCopy />
-                </IconButton>
-              </Tooltip>
-            </CopyToClipboard>
+            <div className={classes.layoutExtraIcons}>
+              <CopyToClipboard text={this.sharedLink()}>
+                <Tooltip title="Share your Doc">
+                  <IconButton disabled={!attachedEvents} color="inherit">
+                    <FileCopy />
+                  </IconButton>
+                </Tooltip>
+              </CopyToClipboard>
+              <IconButton
+                color="inherit"
+                aria-label="Open drawer"
+                onClick={this.handleDrawerOpen}
+                className={classNames({
+                  [classes.hide]: this.state.openDrawer
+                })}
+              >
+                <MenuIcon />
+              </IconButton>
+            </div>
           )
         }
       >
         {attachedEvents && (
-          <div className={classes.root}>
+          <div
+            className={classNames(classes.root, classes.content, {
+              [classes.contentShift]: openDrawer
+            })}
+          >
             <div className={classes.editor}>
               <Editor
                 text={this.state.text}
@@ -256,27 +352,52 @@ class Document extends Component {
                 isAuthor={!draftId}
               />
             </div>
-            <aside className={classes.aside}>
-              <AppBar position="static" classes={{ root: classes.tabHeader }}>
-                <Tabs
-                  value={tabValue}
-                  onChange={this.handleTabChange}
-                  textColor="primary"
-                  indicatorColor="primary"
+            <aside>
+              <Drawer
+                variant="persistent"
+                anchor="right"
+                open={openDrawer}
+                elevation={0}
+                classes={{ paper: classes.drawerContent }}
+                className={classNames(classes.drawer, {
+                  [classes.drawerOpen]: this.state.open,
+                  [classes.drawerClose]: !this.state.open
+                })}
+              >
+                <div className={classes.drawerHeader}>
+                  <IconButton onClick={this.handleDrawerClose}>
+                    {!openDrawer ? <ChevronLeftIcon /> : <ChevronRightIcon />}
+                  </IconButton>
+                </div>
+                <Divider />
+                <AppBar
+                  position="static"
+                  classes={{ root: classes.tabHeader }}
+                  className={classNames({
+                    [classes.asideBarShift]: this.state.open
+                  })}
+                  elevation={0}
                 >
-                  <Tab label="History" />
-                  <Tab label="Collaborators" />
-                </Tabs>
-              </AppBar>
-              {tabValue === 0 && (
-                <History history={localHistory} classes={classes} />
-              )}
-              {tabValue === 1 && (
-                <Collaborators
-                  users={Array.from(collaborators)}
-                  classes={classes}
-                />
-              )}
+                  <Tabs
+                    value={tabValue}
+                    onChange={this.handleTabChange}
+                    textColor="primary"
+                    indicatorColor="primary"
+                  >
+                    <Tab label="History" />
+                    <Tab label="Collaborators" />
+                  </Tabs>
+                  {tabValue === 0 && (
+                    <History history={localHistory} classes={classes} />
+                  )}
+                  {tabValue === 1 && (
+                    <Collaborators
+                      users={Array.from(collaborators)}
+                      classes={classes}
+                    />
+                  )}
+                </AppBar>
+              </Drawer>
             </aside>
           </div>
         )}
