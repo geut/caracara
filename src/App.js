@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
+import { HashRouter as Router, Switch, Route } from 'react-router-dom';
 
 // Material-UI
 import Modal from '@material-ui/core/Modal';
@@ -7,7 +7,6 @@ import { withStyles } from '@material-ui/core/styles';
 
 import withRoot from './withRoot';
 import ConnectedDocument from './containers/Document';
-import DocumentTitleBar from './containers/DocumentTitleBar';
 import Layout from './components/Layout';
 import Username from './components/Username';
 

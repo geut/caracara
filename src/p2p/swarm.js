@@ -4,7 +4,7 @@ import ram from 'random-access-memory';
 import swarm from '@geut/discovery-swarm-webrtc';
 import signalhub from 'signalhubws';
 
-import React, { Component } from 'react';
+import React from 'react';
 
 // P2P DEFAULTS
 const webrtcOpts = {

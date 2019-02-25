@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import { withRouter } from 'react-router-dom';
 import CopyToClipboard from 'react-copy-to-clipboard';
 
 import IconButton from '@material-ui/core/IconButton';

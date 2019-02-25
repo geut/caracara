@@ -40,7 +40,7 @@ class Layout extends Component {
   }
 
   render() {
-    const { classes, username, titleBar, children } = this.props;
+    const { classes, username, children } = this.props;
     return (
       <SwarmContext.Provider
         value={this.state.swarmReady ? this.state.swarm : null}

@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import { withRouter } from 'react-router-dom';
 import Automerge from 'automerge';
 
 import AppBar from '@material-ui/core/AppBar';
