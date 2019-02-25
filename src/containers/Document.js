@@ -51,7 +51,7 @@ class Document extends Component {
     peerValue: {},
     text: '',
     localHistory: [],
-    collaborators: [],
+    collaborators: new Set(),
     swarmReady: false,
     tabValue: 0
   };
@@ -79,9 +79,9 @@ class Document extends Component {
     swarm.on('join', data => {
       console.log('NEW COLLABORATOR', data);
       const { username } = data;
-      this.setState({
-        collaborators: [...this.state.collaborators, username]
-      });
+      this.setState(({ collaborators }) => ({
+        collaborators: new Set(collaborators).add(username)
+      }));
     });
 
     swarm.on('operation', data => {
@@ -241,7 +241,10 @@ class Document extends Component {
               <History history={localHistory} classes={classes} />
             )}
             {tabValue === 1 && (
-              <Collaborators users={collaborators} classes={classes} />
+              <Collaborators
+                users={Array.from(collaborators)}
+                classes={classes}
+              />
             )}
           </aside>
         </div>
