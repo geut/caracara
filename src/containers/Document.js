@@ -71,12 +71,14 @@ const styles = theme => ({
     display: 'none'
   },
   drawer: {
+    width: drawerWidth,
     flexShrink: 0
   },
   drawerContent: {
     overflow: 'hidden',
     backgroundColor: theme.palette.grey[200],
     borderLeft: `1px solid ${theme.palette.grey[500]}`,
+    maxWidth: `${drawerWidth}px`,
     '& > header': {
       height: '100%'
     }
