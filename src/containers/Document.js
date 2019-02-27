@@ -305,7 +305,7 @@ class Document extends Component {
   };
 
   render() {
-    const { classes, username, draftId } = this.props;
+    const { classes, username, hasDraftId } = this.props;
     const {
       attachedEvents,
       tabValue,
@@ -313,7 +313,6 @@ class Document extends Component {
       collaborators,
       openDrawer
     } = this.state;
-
     return (
       <Layout
         username={username}
@@ -351,7 +350,7 @@ class Document extends Component {
               <Editor
                 text={this.state.text}
                 updatePeerValue={this.updatePeerValue}
-                isAuthor={!draftId}
+                isAuthor={!hasDraftId}
               />
             </div>
             <aside>

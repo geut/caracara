@@ -40,7 +40,7 @@ class Editor extends Component {
 
   render() {
     const { classes, text, isAuthor } = this.props;
-
+    const disabled = !text && !isAuthor;
     return (
       <FormControl fullWidth className={classes.textField}>
         <FormLabel>Editor</FormLabel>
@@ -50,35 +50,14 @@ class Editor extends Component {
           inputProps={{ className: classes.input }}
           classes={{ root: classes.inputBase }}
           multiline
-          // placeholder="What's on your head?"
-          disabled={!text && !isAuthor}
+          placeholder={disabled ? 'Loading peer data...' : ''}
+          disabled={disabled}
           onChange={this.onChange}
           value={text}
           autoComplete={'off'}
           autoFocus={true}
         />
       </FormControl>
-
-      // <TextField
-      //   fullWidth
-      //   inputRef={input => (this.taRef = input)}
-      //   id="outlined-multiline-static"
-      //   label="Editor"
-      //   InputProps={{
-      //     classes: {
-      //       root: classes.inputBase
-      //     }
-      //   }}
-      //   multiline
-      //   placeholder="What's on your head?"
-      //   className={classes.textField}
-      //   margin="normal"
-      //   disabled={!text && !isAuthor}
-      //   onChange={this.onChange}
-      //   value={text}
-      //   autoComplete={'off'}
-      //   autoFocus={true}
-      // />
     );
   }
 
@@ -101,7 +80,7 @@ class Editor extends Component {
 
   debouncedPeerValue = debounce(({ text }) => {
     this.props.updatePeerValue({ text });
-  }, 2000);
+  }, 200);
 
   onChange = e => {
     const { value, selectionStart } = e.target;

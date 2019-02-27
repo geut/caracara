@@ -71,15 +71,16 @@ class SwarmProvider extends Component {
 
     this.setState({
       swarm,
-      swarmReady: true
+      swarmReady: true,
+      hasDraftId: !!draftId
     });
   }
 
   render() {
-    const { swarmReady, swarm } = this.state;
+    const { swarmReady, swarm, hasDraftId } = this.state;
     const { children } = this.props;
     return swarmReady ? (
-      <SwarmContext.Provider value={{ swarm }}>
+      <SwarmContext.Provider value={{ swarm, hasDraftId }}>
         {children}
       </SwarmContext.Provider>
     ) : null;
@@ -93,7 +94,13 @@ const withSwarm = WrappedComponent => {
     render() {
       return (
         <SwarmContext.Consumer>
-          {({ swarm }) => <WrappedComponent {...this.props} swarm={swarm} />}
+          {({ swarm, hasDraftId }) => (
+            <WrappedComponent
+              {...this.props}
+              swarm={swarm}
+              hasDraftId={hasDraftId}
+            />
+          )}
         </SwarmContext.Consumer>
       );
     }
