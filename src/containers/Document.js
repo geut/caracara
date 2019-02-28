@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import Automerge from 'automerge';
 import CopyToClipboard from 'react-copy-to-clipboard';
+import withOfflineState from 'react-offline-hoc';
 import classNames from 'classnames';
 
 import AppBar from '@material-ui/core/AppBar';
@@ -76,6 +77,7 @@ const styles = theme => ({
   },
   drawerContent: {
     overflow: 'hidden',
+    width: drawerWidth,
     backgroundColor: theme.palette.grey[200],
     borderLeft: `1px solid ${theme.palette.grey[500]}`,
     maxWidth: `${drawerWidth}px`,
@@ -138,6 +140,7 @@ class Document extends Component {
 
   dmp = new DiffMatchPatch();
   original = undefined;
+  offlineChanges = [];
 
   static getDerivedStateFromProps({ swarm }) {
     if (swarm !== null) {
@@ -193,8 +196,29 @@ class Document extends Component {
     if (swarm !== null) swarm.removeAllListeners('operation');
   }
 
-  updatePeerValue = val => {
+  componentDidUpdate(prevProps) {
     const { swarm, username } = this.props;
+    if (!prevProps.isOnline && this.props.isOnline) {
+      // Note(dk): this ugly part is only necessary due to some issue on
+      // reconnecting websocket instances. Websockets are our transport layer
+      // (together with webrtc), when they loose connection they should try to
+      // reconnect and since that is no happening quite right then the replicate
+      // is not happening. :(
+      if (this.offlineChanges.length) {
+        this.offlineChanges.forEach(change => {
+          swarm.writeOperation({
+            peerValue: change,
+            username,
+            diff: change[0].message
+          });
+        });
+        this.offlineChanges = [];
+      }
+    }
+  }
+
+  updatePeerValue = val => {
+    const { swarm, username, isOnline } = this.props;
     const { text } = val;
 
     // NOTE(dk): this portion should run only once on the creator doc. I choose to use a combination of a
@@ -273,12 +297,16 @@ class Document extends Component {
             },
             () => {
               console.log('SENDING OPERATION', changes);
-              // NOTE(dk): here we are sharingwith our peers changes we have made locally.
-              swarm.writeOperation({
-                peerValue: changes,
-                username,
-                diff: changes[0].message
-              });
+              // NOTE(dk): here we are sharing with our peers changes we have made locally.
+              if (!isOnline) {
+                this.offlineChanges.push(changes);
+              } else {
+                swarm.writeOperation({
+                  peerValue: changes,
+                  username,
+                  diff: changes[0].message
+                });
+              }
             }
           );
         }
@@ -407,4 +435,4 @@ class Document extends Component {
   }
 }
 
-export default withSwarm(withStyles(styles)(Document));
+export default withOfflineState(withSwarm(withStyles(styles)(Document)));

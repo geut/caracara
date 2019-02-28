@@ -1,8 +1,13 @@
 import React, { Component } from 'react';
 
+import withOfflineState from 'react-offline-hoc';
+
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
+import OfflineBolt from '@material-ui/icons/OfflineBolt';
+import Tooltip from '@material-ui/core/Tooltip';
+import IconButton from '@material-ui/core/IconButton';
 import { withStyles } from '@material-ui/core/styles';
 
 const styles = theme => ({
@@ -19,8 +24,19 @@ const styles = theme => ({
   content: {
     flex: 1,
     display: 'flex'
+  },
+  icons: {
+    display: 'inline-flex'
   }
 });
+
+const OfflineIndicator = () => (
+  <Tooltip title="You are offline">
+    <IconButton color="inherit">
+      <OfflineBolt />
+    </IconButton>
+  </Tooltip>
+);
 
 class Layout extends Component {
   state = {
@@ -37,7 +53,7 @@ class Layout extends Component {
   // }
 
   render() {
-    const { classes, username, titleBar, children } = this.props;
+    const { classes, username, titleBar, children, isOnline } = this.props;
     return (
       <div className={classes.root}>
         <AppBar position="static">
@@ -51,7 +67,10 @@ class Layout extends Component {
             <Typography align="center" variant="h6" color="inherit">
               {username ? `Welcome, ${username}!` : ''}
             </Typography>
-            {titleBar}
+            <div className={classes.icons}>
+              {!isOnline ? OfflineIndicator() : ''}
+              {titleBar}
+            </div>
           </Toolbar>
         </AppBar>
         <div className={classes.content}>{children}</div>
@@ -60,4 +79,4 @@ class Layout extends Component {
   }
 }
 
-export default withStyles(styles)(Layout);
+export default withOfflineState(withStyles(styles)(Layout));

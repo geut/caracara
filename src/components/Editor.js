@@ -10,7 +10,7 @@ import { withStyles } from '@material-ui/core/styles';
 
 const styles = theme => ({
   textField: {
-    margin: theme.spacing.unit * 2,
+    padding: theme.spacing.unit * 2,
     display: 'flex',
     flexDirection: 'column',
     flex: 1
