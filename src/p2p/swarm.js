@@ -1,8 +1,10 @@
-import Saga from './core';
+import Saga from '@geut/saga';
 import config from './config';
 import ram from 'random-access-memory';
 import swarm from '@geut/discovery-swarm-webrtc';
 import signalhub from 'signalhubws';
+
+import React, { Component } from 'react';
 
 // P2P DEFAULTS
 const webrtcOpts = {
@@ -55,3 +57,54 @@ const initComm = async (username, key) => {
 };
 
 export default initComm;
+
+const SwarmContext = React.createContext(null);
+
+class SwarmProvider extends Component {
+  state = {
+    swarmReady: false
+  };
+
+  async componentDidMount() {
+    const { username, match: { params: { draftId = null } } = {} } = this.props;
+    const swarm = await initComm(username, draftId);
+
+    this.setState({
+      swarm,
+      swarmReady: true,
+      hasDraftId: !!draftId
+    });
+  }
+
+  render() {
+    const { swarmReady, swarm, hasDraftId } = this.state;
+    const { children } = this.props;
+    return swarmReady ? (
+      <SwarmContext.Provider value={{ swarm, hasDraftId }}>
+        {children}
+      </SwarmContext.Provider>
+    ) : null;
+  }
+}
+
+const withSwarm = WrappedComponent => {
+  return class extends Component {
+    static displayName = `WithSwarm${WrappedComponent.displayName}`;
+
+    render() {
+      return (
+        <SwarmContext.Consumer>
+          {({ swarm, hasDraftId }) => (
+            <WrappedComponent
+              {...this.props}
+              swarm={swarm}
+              hasDraftId={hasDraftId}
+            />
+          )}
+        </SwarmContext.Consumer>
+      );
+    }
+  };
+};
+
+export { SwarmProvider, withSwarm };

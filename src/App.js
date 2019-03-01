@@ -1,46 +1,63 @@
 import React, { Component } from 'react';
-import { BrowserRouter as Router, Route } from 'react-router-dom';
-import Modal from 'react-modal';
-import copy from 'copy-to-clipboard';
-import Clip from './icons/clipboard';
-import Doc from './Doc';
-import swarm from './p2p/swarm';
+import { HashRouter as Router, Route } from 'react-router-dom';
 
-import './App.css';
+// Material-UI
+import Modal from '@material-ui/core/Modal';
+import { withStyles } from '@material-ui/core/styles';
 
-const customStyles = {
-  content: {
-    top: '50%',
-    left: '50%',
-    right: 'auto',
-    bottom: 'auto',
-    marginRight: '-50%',
-    transform: 'translate(-50%, -50%)'
+import withRoot from './withRoot';
+import Document from './containers/Document';
+import Username from './components/Username';
+import { SwarmProvider } from './p2p/swarm';
+
+const styles = theme => ({
+  root: {
+    display: 'flex',
+    flexFlow: 'row wrap',
+    /* The remaining place (horizontaly) will be spread out around divs in wrapper. */
+    justifyContent: 'space-around',
+    backgroundColor: theme.palette.grey[200]
+  },
+  modal: {
+    textAlign: 'center',
+    paddingTop: theme.spacing.unit * 20
+  },
+  paper: {
+    position: 'absolute',
+    width: theme.spacing.unit * 50,
+    backgroundColor: theme.palette.background.paper,
+    boxShadow: theme.shadows[5],
+    padding: theme.spacing.unit * 4,
+    outline: 'none'
+  },
+  grow: {
+    flexGrow: 1
+  },
+  icon: {
+    fontSize: 24
   }
-};
+});
 
 class App extends Component {
-  constructor() {
-    super();
-
-    this.comm = null;
-    this.state = {
-      commReady: false,
-      modalIsOpen: true,
-      username: ''
-    };
-
-    this.url = window.location.protocol + '//' + window.location.host;
-    this.params = new URLSearchParams(window.location.search);
-    this.draftId = this.params.get('draft');
-  }
+  comm = null;
+  state = {
+    commReady: false,
+    modalIsOpen: true,
+    modalError: false,
+    username: ''
+  };
 
   saveUsername = e => {
     const { target } = e;
-    this.setState({ username: target.value });
+    this.setState({ username: target.value, modalError: false });
   };
 
   closeModal = () => {
+    const { username } = this.state;
+    if (!username) {
+      this.setState({ modalError: true });
+      return;
+    }
     this.setState({ modalIsOpen: false });
   };
 
@@ -49,82 +66,43 @@ class App extends Component {
 
     if (prevState.modalIsOpen && !modalIsOpen && username) {
       // username has been set
-      this.comm = await swarm(username, this.draftId);
       this.setState({
         commReady: true
       });
     }
   }
-  copy = e => {
-    e.preventDefault();
-    copy(`${this.url}?draft=${this.comm.db.key.toString('hex')}`);
-  };
 
   render(props) {
-    const { modalIsOpen, commReady } = this.state;
+    const { modalIsOpen, commReady, username, modalError } = this.state;
+    const { classes } = this.props;
+
     return (
-      <div className="App">
-        <Modal
-          isOpen={this.state.modalIsOpen}
-          onRequestClose={this.closeModal}
-          style={customStyles}
-          contentLabel="Set your username"
-          shouldCloseOnOverlayClick={false}
-          shouldCloseOnEsc={false}
-          data={{
-            background: 'green'
-          }}
-        >
-          <form onSubmit={this.closeModal}>
-            <legend>Set your username</legend>
-            <input type="text" onChange={this.saveUsername} required />
-            <button type="submit">Enter</button>
-          </form>
-        </Modal>
-        <Router>
-          {!modalIsOpen && commReady ? (
+      <Router>
+        <div className={classes.root}>
+          <Modal open={this.state.modalIsOpen} disableEscapeKeyDown={true}>
+            <Username
+              classes={classes.paper}
+              closeModal={this.closeModal}
+              onUsernameChange={this.saveUsername}
+              error={modalError}
+            />
+          </Modal>
+          {!modalIsOpen && commReady && (
             <Route
-              path="/"
+              path="/:draftId?"
               render={props => {
                 return (
-                  <>
-                    <header className="App-header">
-                      Caracara{' '}
-                      <span role="img" aria-label="caracara bird using a emoji">
-                        🐧
-                      </span>
-                      <span className="App-username">
-                        {this.state.username
-                          ? `${this.state.username} is online`
-                          : ''}
-                      </span>
-                      <div>
-                        <span>
-                          {this.comm && this.comm.db.key
-                            ? `Draft: ${this.comm.db.key.toString('hex')}`
-                            : ''}
-                        </span>
-                        <span onClick={this.copy} className="App-icon-clip">
-                          <Clip />
-                        </span>
-                      </div>
-                    </header>
-                    <Doc
-                      username={this.state.username}
-                      comm={this.comm}
-                      draftId={this.draftId}
-                    />
-                  </>
+                  <SwarmProvider {...props} username={username}>
+                    <Document username={username} />
+                  </SwarmProvider>
                 );
               }}
             />
-          ) : null}
-        </Router>
-      </div>
+          )}
+        </div>
+      </Router>
     );
   }
 }
 
-Modal.setAppElement('#root');
-
-export default App;
+export default withRoot(withStyles(styles)(App));
