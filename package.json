@@ -25,7 +25,7 @@
     "react-offline-hoc": "^1.0.0",
     "react-router-dom": "^4.3.1",
     "react-scripts": "^2.1.5",
-    "signalhubws": "^1.0.7",
+    "signalhubws": "git+https://github.com/geut/signalhubws.git",
     "tinydate": "^1.0.1",
     "typeface-roboto": "0.0.54"
   },
