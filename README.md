@@ -7,10 +7,13 @@
 The [caracara](https://en.wikipedia.org/wiki/Southern_crested_caracara) is one of the birds that annually visit Tierra del Fuego.
 
 ## Contents
-* [Usage](#usage)
+* [Development](#development)
 * [Article](#article)
 
-## Usage
+## Development
+
+<details>
+  <summary>Instructions for running caracara locally</summary>
 
 ### `npm start`
 
@@ -28,6 +31,7 @@ The app needs a signalhub server for connecting with other peers. Here we are us
 
 Run in a different terminal:
 `npx signalhubws -p 4000`
+</details>
 
 ## Article
 
