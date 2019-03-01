@@ -116,16 +116,59 @@ sw.on('connection', async peer => {
 These are the important bits of the swarm creation. Now, let's see how we use this inside our app.
 
 ```javascript
-  async componentDidUpdate(prevProps, prevState) {
-    const { modalIsOpen, username } = this.state;
+const SwarmContext = React.createContext(null);
 
-    if (prevState.modalIsOpen && !modalIsOpen && username) {
-      // swarm creation, the username is required, if the draftId is null, then saga will create one for us.
-      // We can share this key with others peers which will became collaborators.
-      this.comm = await swarm(username, this.draftId);
-    }
+class SwarmProvider extends Component {
+  state = {
+    swarmReady: false
+  };
+
+  async componentDidMount() {
+    const { username, match: { params: { draftId = null } } = {} } = this.props;
+    const swarm = await initComm(username, draftId);
+
+    this.setState({
+      swarm,
+      swarmReady: true,
+      hasDraftId: !!draftId
+    });
   }
+
+  render() {
+    const { swarmReady, swarm, hasDraftId } = this.state;
+    const { children } = this.props;
+    return swarmReady ? (
+      <SwarmContext.Provider value={{ swarm, hasDraftId }}>
+        {children}
+      </SwarmContext.Provider>
+    ) : null;
+  }
+}
 ```
+
+```javascript
+const withSwarm = WrappedComponent => {
+  return class extends Component {
+    static displayName = `WithSwarm${WrappedComponent.displayName}`;
+
+    render() {
+      return (
+        <SwarmContext.Consumer>
+          {({ swarm, hasDraftId }) => (
+            <WrappedComponent
+              {...this.props}
+              swarm={swarm}
+              hasDraftId={hasDraftId}
+            />
+          )}
+        </SwarmContext.Consumer>
+      );
+    }
+  };
+};
+```
+
+As you can see we have created a provider using the React Context API and also a `withSwarm` HOC for easy consuming using idiomatic React.
 
 #### The editor
 
@@ -135,37 +178,53 @@ There are two new important dependencies at this step:
 
 `npm install automerge diff-match-patch`
 
-For this part we are going to highlight the [Doc.js](src/Doc.js) and [Editor.js](src/Editor.js) components.
+For this part we are going to highlight the [Document.js](src/containers/Document.js) and [Editor.js](src/components/Editor.js) components.
 
 ```javascript
-async componentDidMount() {
-  // Doc component will receive a saga instance (called comm) via props.
-  // We use the operation event here:
-  this.props.comm.on('operation', data => {
-    const { username, message } = data;
+componentDidMount() {
+  const { swarm } = this.props;
+  if (!swarm) return;
+
+  if (this.state.attachedEvents) return;
+
+  swarm.on('join', data => {
+    console.log('NEW COLLABORATOR', data);
+    const { username } = data;
+    this.setState(({ collaborators }) => ({
+      collaborators: new Set(collaborators).add(username)
+    }));
+  });
+
+  swarm.on('operation', data => {
+    const { username, operation } = data;
     if (username === this.props.username) return;
-    if (message.peerValue.length === 0) return;
-    // message.peerValue contains doc changes. We will see more about this soon.
+    console.log('INCOMING OPERATION');
+    console.log('new operation from:', username);
+    console.log('new operation content:', operation);
+    if (operation.peerValue.length === 0) return;
     let newDoc;
     if (!this.doc) {
-      newDoc = Automerge.applyChanges(Automerge.init(), message.peerValue);
+      newDoc = Automerge.applyChanges(Automerge.init(), operation.peerValue);
     } else {
-      newDoc = Automerge.applyChanges(this.doc, message.peerValue);
+      newDoc = Automerge.applyChanges(this.doc, operation.peerValue); // peerValue are automerge changes
     }
-    if (message.original) {
-      this.original = message.original;
+    if (operation.original) {
+      this.original = operation.original;
     }
     this.doc = newDoc;
-    this.setState({
+    this.setState(prevState => ({
       text: newDoc.text.join(''),
-      localHistory: [...this.state.localHistory, message.diff]
-    });
+      localHistory: [...this.state.localHistory, operation.diff]
+    }));
   });
+
+  this.setState({ attachedEvents: true });
 }
 
 componentWillUnmount() {
   // Remember to remove listeners on unmount!
-  this.props.comm.removeAllListeners('operation');
+  const { swarm } = this.props;
+  if (swarm !== null) swarm.removeAllListeners('operation');
 }
 ```
 
@@ -262,7 +321,7 @@ updatePeerValue = val => {
             text,
             localHistory: [...this.state.localHistory, changes[0].message]
           },
-() => {
+          () => {
             // NOTE(dk): here we are sharing changes we made locally with our peers.
             comm.writeMessage({
               peerValue: changes,
@@ -282,22 +341,28 @@ Last but not least, the editor, this is the simplest piece of the whole project.
 Here are the important bits.
 
 ```javascript
-debouncedPeerValue = debounce(({ text }) => {
-  this.props.updatePeerValue({ text });
-}, 20);
-
-onChange = e => {
-  const { value, selectionStart } = e.target;
-
-  this.setState({
-    value,
-    selectionStart
-  });
-  this.debouncedPeerValue({ text: value });
-};
+  onChange = e => {
+    const { value, selectionStart } = e.target;
+    this.setState(
+      {
+        value,
+        selectionStart
+      },
+      () => {
+        if (this.state.selectionStart !== -1) {
+          this.setCaretToPos(this.taRef, this.state.selectionStart);
+        }
+      }
+    );
+    this.props.updatePeerValue({ text: value });
+    // Note(dk): a deboung will be better to not overload network
+    // but is making things difficult with the UX.
+    // Im going to revisit this strategy later, it requires a big refactor.
+    // this.debouncedPeerValue({ text: value });
+  };
 ```
 
-The editor renders a textarea component with an `onChange` function attached to it. The `onChange` function updates the local value and call the `updatePeerValue` function that we have just seen. We also added a debounce function to improve the UX a little bit.
+The editor renders a textarea component with an `onChange` function attached to it. The `onChange` function updates the local value and call the `updatePeerValue` function that we have just seen.
 
 #### Caveats
 
@@ -311,9 +376,9 @@ We have just dealt with the development of a **Dat powered web app**. Let's summ
 1. Install and instantiate `saga`. This is a top level interface on top of `hyperdb`.
 2. Create the swarm. This is useful to find another peers. Since we are creating a webapp we will be relying on WebRTC for peer to peer communication. A signal server will be required then. You can host your own if you want to. This is [the one](https://github.com/soyuka/signalhubws) we recommend these days.
 3. After `saga` instantiation and swarm creation, we can start playing with our app. :tada:
-  1. Since we were after a collaborative editor, two modules appear as a good choice here: `Automerge` and `diff-match-patch`.
-  2. We will share operations that we get from [Automerge](https://github.com/automerge/automerge#sending-and-receiving-changes) changes.
-  3. `diff-match-patch` is used to extract `deltas` from plain text.
+    1. Since we were after a collaborative editor, two modules appear as a good choice here: `Automerge` and `diff-match-patch`.
+    2. We will share operations that we get from [Automerge](https://github.com/automerge/automerge#sending-and-receiving-changes) changes.
+    3. `diff-match-patch` is used to extract `deltas` from plain text.
 4. That's all! :+1:
 
 As you can see, thinking about sharing operations among peers opens the possibilities for new kind of applications and also makes things a bit easier. Looks like a win-win situation.

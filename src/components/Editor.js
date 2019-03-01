@@ -4,8 +4,6 @@ import React, { Component } from 'react';
 import FormControl from '@material-ui/core/FormControl';
 import FormLabel from '@material-ui/core/FormLabel';
 import InputBase from '@material-ui/core/InputBase';
-// import InputLabel from '@material-ui/core/InputLabel';
-// import TextField from '@material-ui/core/TextField';
 import { withStyles } from '@material-ui/core/styles';
 
 const styles = theme => ({
