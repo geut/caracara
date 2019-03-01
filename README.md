@@ -378,7 +378,7 @@ The app is not totally decentralized. It is good to know this from the very begi
 We have just dealt with the development of a **Dat powered web app**. Let's summarize the important parts:
 
 1. Install and instantiate `saga`. This is a top level interface on top of `hyperdb`.
-2. Create the swarm. This is useful to find another peers. Since we are creating a webapp we will be relying on WebRTC for peer to peer communication. A signal server will be required then. You can host your own if you want to. This is [the one](https://github.com/soyuka/signalhubws) we recommend these days.
+2. Create the swarm. This is useful to find another peers. Since we are creating a webapp we will be relying on WebRTC for peer to peer communication. A signal server will be required then. You can host your own if you want to. This is [the one](https://github.com/soyuka/signalhubws) we recommend these days. Nevertheless, we are doing some work pushing some enhancements to it, so we are using a [forked version](https://github.com/geut/signalhubws), but a PR will be made soon.
 3. After `saga` instantiation and swarm creation, we can start playing with our app. :tada:
     1. Since we were after a collaborative editor, two modules appear as a good choice here: `Automerge` and `diff-match-patch`.
     2. We will share operations that we get from [Automerge](https://github.com/automerge/automerge#sending-and-receiving-changes) changes.
