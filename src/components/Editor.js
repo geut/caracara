@@ -2,7 +2,6 @@ import { debounce } from 'debounce';
 import React, { Component } from 'react';
 
 import FormControl from '@material-ui/core/FormControl';
-import FormLabel from '@material-ui/core/FormLabel';
 import InputBase from '@material-ui/core/InputBase';
 import { withStyles } from '@material-ui/core/styles';
 
@@ -10,8 +9,8 @@ const styles = theme => ({
   textField: {
     padding: theme.spacing.unit * 2,
     display: 'flex',
-    flexDirection: 'column',
-    flex: 1
+    flex: 1,
+    flexDirection: 'column'
   },
   inputBase: {
     overflow: 'auto',
@@ -40,8 +39,7 @@ class Editor extends Component {
     const { classes, text, isAuthor } = this.props;
     const disabled = !text && !isAuthor;
     return (
-      <FormControl fullWidth className={classes.textField}>
-        <FormLabel>Editor</FormLabel>
+      <FormControl className={classes.textField}>
         <InputBase
           inputRef={input => (this.taRef = input)}
           id="editor"
