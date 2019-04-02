@@ -11,6 +11,7 @@ import Drawer from '@material-ui/core/Drawer';
 import Divider from '@material-ui/core/Divider';
 import IconButton from '@material-ui/core/IconButton';
 import MenuIcon from '@material-ui/icons/Menu';
+import SaveIcon from '@material-ui/icons/Save';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import Tooltip from '@material-ui/core/Tooltip';
@@ -20,6 +21,7 @@ import FileCopy from '@material-ui/icons/FileCopy';
 
 import DiffMatchPatch from 'diff-match-patch';
 import tinydate from 'tinydate';
+import { saveAs } from 'file-saver';
 
 import Collaborators from '../components/Collaborators';
 import Editor from '../components/Editor';
@@ -307,6 +309,13 @@ class Document extends Component {
     this.setState({ openDrawer: false });
   };
 
+  saveMe = () => {
+    const blob = new Blob([this.state.text], {
+      type: 'text/plain;charset=utf-8'
+    });
+    saveAs(blob, 'caracara.md');
+  };
+
   render() {
     const { classes, username, hasDraftId } = this.props;
     const {
@@ -322,6 +331,11 @@ class Document extends Component {
         titleBar={
           attachedEvents && (
             <div className={classes.layoutExtraIcons}>
+              <Tooltip title="Download your Doc">
+                <IconButton color="inherit" onClick={this.saveMe}>
+                  <SaveIcon />
+                </IconButton>
+              </Tooltip>
               <CopyToClipboard text={this.sharedLink()}>
                 <Tooltip title="Share your Doc">
                   <IconButton disabled={!attachedEvents} color="inherit">
