@@ -23,6 +23,7 @@ import tinydate from 'tinydate';
 
 import Collaborators from '../components/Collaborators';
 import Editor from '../components/Editor';
+import Preview from '../components/EditorPreview';
 import History from '../components/History';
 import Layout from '../components/Layout';
 import { withSwarm } from '../p2p/swarm';
@@ -32,12 +33,15 @@ const drawerWidth = 300;
 const styles = theme => ({
   root: {
     flex: 1,
-    display: 'flex'
+    display: 'flex',
+    height: '100%',
+    width: '100%'
   },
-  editor: {
+  editorContainer: {
     flex: 1,
     display: 'flex',
-    flexDirection: 'column',
+    width: '100%',
+    justifyContent: 'flex-start',
     backgroundColor: theme.palette.background.paper
   },
   title: {
@@ -349,12 +353,13 @@ class Document extends Component {
               [classes.contentShift]: openDrawer
             })}
           >
-            <div className={classes.editor}>
+            <div className={classes.editorContainer}>
               <Editor
                 text={this.state.text}
                 updatePeerValue={this.updatePeerValue}
                 isAuthor={!hasDraftId}
               />
+              <Preview text={this.state.text} />
             </div>
             <aside>
               <Drawer

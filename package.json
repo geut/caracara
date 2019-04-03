@@ -25,9 +25,11 @@
     "react-offline-hoc": "^1.0.0",
     "react-router-dom": "^4.3.1",
     "react-scripts": "^2.1.5",
+    "react-syntax-highlighter": "^10.2.1",
     "signalhubws": "git+https://github.com/geut/signalhubws.git",
     "tinydate": "^1.0.1",
-    "typeface-roboto": "0.0.54"
+    "typeface-roboto": "0.0.54",
+    "typeface-roboto-mono": "0.0.54"
   },
   "peerDependencies": {
     "react": "^16.7.0",
