@@ -1,15 +1,13 @@
 import React, { Component } from 'react';
 
-import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
-import markdown from 'react-syntax-highlighter/dist/esm/languages/hljs/markdown';
-import hljsStyle from 'react-syntax-highlighter/dist/esm/styles/hljs/dracula';
+import ReactMarkdown from 'react-markdown';
 
 import Drawer from '@material-ui/core/Drawer';
 import Fab from '@material-ui/core/Fab';
 import SubjectIcon from '@material-ui/icons/Subject';
 import { withStyles } from '@material-ui/core/styles';
 
-SyntaxHighlighter.registerLanguage('markdown', markdown);
+import CodeBlock from './plugins/CodeBlock';
 
 const styles = theme => ({
   preview: {
@@ -25,11 +23,29 @@ const styles = theme => ({
     marginRight: theme.spacing.unit
   },
   drawerPaper: {
-    background: 'rgb(40, 42, 54)',
     width: '60%',
     height: '100%',
     [theme.breakpoints.down('sm')]: {
       width: '90%'
+    }
+  },
+  mdelem: {
+    fontFamily: theme.typography.fontFamily,
+    padding: theme.spacing.unit * 4,
+    '& > table': {
+      borderCollapse: 'collapse',
+      borderSpacing: '0'
+    },
+    '& > table tr:nth-child(2n)': {
+      background: '#f6f8fa'
+    },
+    '& > table tr': {
+      borderTop: '1px solid #c6cbd1',
+      background: '#fff'
+    },
+    '& > table th,td': {
+      padding: '6px 13px',
+      border: '1px solid #dfe2e5'
     }
   }
 });
@@ -71,21 +87,12 @@ class EditorPreview extends Component {
               paper: classes.drawerPaper
             }}
           >
-            <SyntaxHighlighter
-              customStyle={{
-                display: 'flex',
-                flex: 1,
-                padding: '16px',
-                flexDirection: 'column',
-                height: '100%',
-                whiteSpace: 'pre-wrap',
-                wordBreak: 'break-word'
-              }}
-              style={hljsStyle}
-              language="markdown"
-            >
-              {text}
-            </SyntaxHighlighter>
+            <ReactMarkdown
+              source={text}
+              className={classes.mdelem}
+              renderers={{ code: CodeBlock }}
+              escapeHtml={false}
+            />
           </Drawer>
         </div>
       </React.Fragment>
