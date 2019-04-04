@@ -9,3 +9,4 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - UI refactor with some help of @elmasse
 - markdown preview using react-syntax-highlighter
 - add download (text) option
+- improve md rendering using react-markdown.
