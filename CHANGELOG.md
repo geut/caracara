@@ -10,3 +10,4 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - markdown preview using react-syntax-highlighter
 - add download (text) option
 - improve md rendering using react-markdown.
+- Move Automerge inside a worker for better rendering perf
