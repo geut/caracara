@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import Automerge from 'automerge';
 import CopyToClipboard from 'react-copy-to-clipboard';
 import withOfflineState from 'react-offline-hoc';
 import classNames from 'classnames';
@@ -22,6 +21,7 @@ import FileCopy from '@material-ui/icons/FileCopy';
 import DiffMatchPatch from 'diff-match-patch';
 import tinydate from 'tinydate';
 import { saveAs } from 'file-saver';
+import { createAutomergeWorker } from '@wirelineio/automerge-worker';
 
 import Collaborators from '../components/Collaborators';
 import Editor from '../components/Editor';
@@ -133,20 +133,26 @@ const styles = theme => ({
 const stamp = tinydate('{HH}:{mm}:{ss}');
 
 class Document extends Component {
-  state = {
-    attachedEvents: false,
-    peerValue: {},
-    text: '',
-    localHistory: [],
-    collaborators: new Set(),
-    swarmReady: false,
-    tabValue: 0,
-    openDrawer: false
-  };
+  constructor() {
+    super();
+    this.dmp = new DiffMatchPatch();
+    this.original = undefined;
+    this.offlineChanges = [];
+    this.amWorker = createAutomergeWorker();
+    this.incomingOperationChange = this.incomingOperationChange.bind(this);
 
-  dmp = new DiffMatchPatch();
-  original = undefined;
-  offlineChanges = [];
+    this.state = {
+      documentTitle: 'p2pdoc',
+      attachedEvents: false,
+      peerValue: {},
+      text: '',
+      localHistory: [],
+      collaborators: new Set(),
+      swarmReady: false,
+      tabValue: 0,
+      openDrawer: false
+    };
+  }
 
   static getDerivedStateFromProps({ swarm }) {
     if (swarm !== null) {
@@ -157,11 +163,69 @@ class Document extends Component {
     return null;
   }
 
+  async incomingOperationChange(data) {
+    const { username, operation } = data;
+    if (username === this.props.username) return;
+    console.log('INCOMING OPERATION');
+    console.log('new operation from:', username);
+    console.log('new operation content:', operation);
+
+    if (operation.original) {
+      await this.amWorker.createDocumentFromChanges(
+        this.props.username,
+        this.state.documentTitle,
+        operation.peerValue
+      );
+      const text = await this.amWorker.getDocumentContent(
+        this.state.documentTitle
+      );
+      this.setState(prevState => ({
+        original: operation.original ? operation.original : prevState.original,
+        text,
+        localHistory: [...this.state.localHistory, operation.diff || '']
+      }));
+    } else {
+      this.amWorker.applyChanges(
+        this.state.documentTitle,
+        operation.peerValue,
+        { local: false, notify: false }
+      );
+    }
+  }
+
   componentDidMount() {
-    const { swarm } = this.props;
+    const { swarm, username } = this.props;
+
     if (!swarm) return;
 
     if (this.state.attachedEvents) return;
+
+    this.amWorker.on(
+      'changes',
+      ({ documentId, changes, content, data: { notify, local } }) => {
+        if (!local) {
+          // Note(dk): INCOMING OPERATION update
+          // This is a like the continuation of the work done in `incomingOperationChange`.
+          // Since amWorker is async (event-based), we need this hook to get notified from succesfully
+          // applied operations/changes.
+          this.setState(prevState => ({
+            text: content
+          }));
+        }
+
+        if (!notify) return;
+
+        console.log('SENDING OPERATION', changes);
+        // NOTE(dk): here we are sharing with our peers changes we have made locally.
+        swarm.writeOperation({
+          notify,
+          local,
+          peerValue: changes,
+          username,
+          diff: changes[0].message
+        });
+      }
+    );
 
     swarm.on('join', data => {
       console.log('NEW COLLABORATOR', data);
@@ -171,28 +235,7 @@ class Document extends Component {
       }));
     });
 
-    swarm.on('operation', data => {
-      const { username, operation } = data;
-      if (username === this.props.username) return;
-      console.log('INCOMING OPERATION');
-      console.log('new operation from:', username);
-      console.log('new operation content:', operation);
-      if (operation.peerValue.length === 0) return;
-      let newDoc;
-      if (!this.doc) {
-        newDoc = Automerge.applyChanges(Automerge.init(), operation.peerValue);
-      } else {
-        newDoc = Automerge.applyChanges(this.doc, operation.peerValue); // peerValue are automerge changes
-      }
-      if (operation.original) {
-        this.original = operation.original;
-      }
-      this.doc = newDoc;
-      this.setState(prevState => ({
-        text: newDoc.text.join(''),
-        localHistory: [...this.state.localHistory, operation.diff]
-      }));
-    });
+    swarm.on('operation', this.incomingOperationChange);
 
     this.setState({ attachedEvents: true });
   }
@@ -202,25 +245,29 @@ class Document extends Component {
     if (swarm !== null) swarm.removeAllListeners('operation');
   }
 
-  updatePeerValue = val => {
+  updatePeerValue = async val => {
     const { swarm, username } = this.props;
     const { text } = val;
 
     // NOTE(dk): this portion should run only once on the creator doc. I choose to use a combination of a
     // local value as a safeguard and something that should be unique for the creator... but I'm not sure
     // of the last one.
-    if (!this.original && swarm.db.local.secretKey) {
+    if (!this.state.original && swarm.db.local.secretKey) {
       console.log('ORIGINAL COPY');
-      this.doc = Automerge.change(Automerge.init(), 'doc:creation', doc => {
-        doc.text = new Automerge.Text();
-      });
-      const creationChange = Automerge.getChanges(Automerge.init(), this.doc);
-      this.original = true;
+      // document creation
+
+      const { changes } = await this.amWorker.createDocument(
+        username,
+        this.state.documentTitle
+      );
+      this.doc = changes;
+
+      this.setState({ original: true });
 
       swarm.writeOperation({
-        peerValue: creationChange,
+        peerValue: changes,
         username,
-        original: this.original,
+        original: true,
         diff: `${username} created the doc - ${stamp(new Date(Date.now()))}`
       });
     }
@@ -231,66 +278,54 @@ class Document extends Component {
     this.dmp.diff_cleanupSemantic(diff);
     const patches = this.dmp.patch_make(this.state.text, diff);
 
-    const updateAutomerge = (baseDoc, message, opFn) => {
-      return Automerge.change(baseDoc, message, doc => {
-        opFn(doc);
-      });
-    };
-
     patches.forEach(patch => {
       let idx = patch.start1;
       let historyMessage = '';
-      let newDoc;
       patch.diffs.forEach(([operation, changeText]) => {
         switch (operation) {
           case 1: // Insertion
             historyMessage = `${username} added (${changeText}) - ${stamp(
               new Date(Date.now())
             )}`;
-            newDoc = updateAutomerge(this.doc, historyMessage, doc => {
-              console.log(`inserting text ${changeText.split('')} at ${idx}`);
-              doc.text.insertAt(idx, ...changeText.split(''));
-            });
+
+            console.log(historyMessage);
+            this.amWorker.applyOperations(
+              this.state.documentTitle,
+              [{ type: 'insert', rangeOffset: idx, text: changeText }],
+              { notify: true, local: true }
+            );
+
             idx += changeText.length;
             break;
           case 0: // No Change
             idx += changeText.length;
-            newDoc = null;
             break;
           case -1: // Deletion
             historyMessage = `${username} removed (${changeText}) - ${stamp(
               new Date(Date.now())
             )}`;
-            newDoc = updateAutomerge(this.doc, historyMessage, doc => {
-              for (let i = 0; i < changeText.length; i++) {
-                console.log('removing text at pos', idx);
-                doc.text.deleteAt(idx);
-              }
-              return doc;
-            });
+
+            this.amWorker.applyOperations(
+              this.state.documentTitle,
+              [
+                {
+                  type: 'delete',
+                  rangeOffset: idx,
+                  rangeLength: changeText.length
+                }
+              ],
+              { notify: true, local: true }
+            );
             break;
           default:
             break;
         }
-        if (newDoc) {
-          const changes = Automerge.getChanges(this.doc, newDoc);
-          this.doc = newDoc;
-          this.setState(
-            {
-              text,
-              localHistory: [...this.state.localHistory, changes[0].message]
-            },
-            () => {
-              console.log('SENDING OPERATION', changes);
-              // NOTE(dk): here we are sharing with our peers changes we have made locally.
-              swarm.writeOperation({
-                peerValue: changes,
-                username,
-                diff: changes[0].message
-              });
-            }
-          );
-        }
+
+        // Local update
+        this.setState({
+          text,
+          localHistory: [...this.state.localHistory, historyMessage || '']
+        });
       });
     });
   };

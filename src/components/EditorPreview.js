@@ -46,6 +46,12 @@ const styles = theme => ({
     '& > table th,td': {
       padding: '6px 13px',
       border: '1px solid #dfe2e5'
+    },
+    '& > blockquote': {
+      borderLeft: '.25em solid #dfe2e5',
+      color: '#6a737d',
+      padding: '0 1em',
+      margin: 0
     }
   }
 });
